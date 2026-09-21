@@ -1,4 +1,0 @@
-interface:
-  display_name: "PhoneFarm Android Workers"
-  short_description: "Build and operate Android farm workers"
-  default_prompt: "Use -run-android-workers to build and validate a PhoneFarm worker."

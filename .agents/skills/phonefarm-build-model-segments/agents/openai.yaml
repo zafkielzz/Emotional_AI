@@ -1,4 +1,0 @@
-interface:
-  display_name: "PhoneFarm Model Segments"
-  short_description: "Split, export, validate PhoneFarm models"
-  default_prompt: "Use -build-model-segments to split and validate a PhoneFarm model."

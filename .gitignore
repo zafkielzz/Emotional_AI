@@ -29,6 +29,17 @@ android-worker/local.properties
 **/*.keystore
 **/*.jks
 
+# --- Agent Rules & Internal Tooling ---
+AGENTS.md
+GEMINI.md
+.agents/
+.codex/
+
+# --- Word Documents & Office Files ---
+*.docx
+*.doc
+~$*.docx
+
 # --- Machine Learning Models, Weights & Large Artifacts ---
 *.safetensors
 *.gguf
@@ -42,33 +53,14 @@ android-worker/local.properties
 *.tar.gz
 artifacts/
 
+# --- Edge Worker & Controller Deployment ---
+android-worker/
+controller/
+
 # --- Build Outputs, Packages & Binaries ---
 *.apk
 *.aab
 third_party/
-
-# --- Flutter & Dart (android-worker) ---
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-android-worker/.dart_tool/
-android-worker/build/
-android-worker/.flutter-plugins
-android-worker/.flutter-plugins-dependencies
-android-worker/*.iml
-android-worker/.idea/
-android-worker/android/.gradle/
-android-worker/android/app/build/
-android-worker/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
-android-worker/ios/Pods/
-android-worker/ios/.symlinks/
-android-worker/ios/Flutter/ephemeral/
-android-worker/ios/Flutter/Generated.xcconfig
-android-worker/ios/Flutter/flutter_export_environment.sh
-android-worker/ios/Runner/GeneratedPluginRegistrant.*
-android-worker/macos/Flutter/ephemeral/
-android-worker/macos/Flutter/GeneratedPluginRegistrant.*
 
 # --- Databases, Logs, Metrics & Runtime State ---
 *.log
@@ -88,4 +80,3 @@ sandbox/last_appraisal_debug.log
 *~
 .DS_Store
 Thumbs.db
-~$*.docx
