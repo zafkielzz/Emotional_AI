@@ -110,17 +110,10 @@ $$\text{Action}_t = \arg\max_{a} \sum_{k \in \{S, I, R, E, M\}} \text{Weight}_k 
 
 ## 4. Cấu trúc Thư mục Dự án (Repository Structure)
 
+> 💡 **Ghi chú**: Các module môi trường thiết bị di động (`android-worker/`) và trung tâm điều phối (`controller/`) được duy trì phát triển cục bộ (nằm trong `.gitignore`) để giữ repository tập trung tối đa vào mã nguồn cốt lõi của Kiến trúc Nhận thức Cảm xúc, Sandbox & Pipeline.
+
 ```
 PhoneFarm/
-├── android-worker/             # 📱 Flutter & Kotlin Edge Worker cho Android
-│   ├── lib/                    # Mã nguồn giao diện Flutter & kết nối Relay
-│   ├── android/                # Android app cấu hình JNI libs & runtime native
-│   │   └── app/src/main/jniLibs/arm64-v8a/  # Prebuilt llama.cpp binaries
-│   └── README.md               # Hướng dẫn build APK & kết nối Controller
-│
-├── controller/                 # 🎮 Central Controller điều phối Phone Farm
-│   └── phonefarm_controller/   # Registry thiết bị, Relay WebSocket Protocol v1
-│
 ├── sandbox/                    # 🧪 Môi trường Giả lập & Đánh giá Khoa học Local
 │   ├── formal_state.py         # Bộ máy toán học S_t = [E, R, M, P], tanh Gate
 │   ├── appraisal_engine.py     # Thẩm định nhận thức Scherer CPM
@@ -148,7 +141,6 @@ PhoneFarm/
 │   └── protocol_spec/          # Đặc tả nhị phân Protocol v1 (PROTOCOL_V1.md)
 │
 ├── scripts/                    # 🛠️ Script hỗ trợ chạy Controller & Stress Test
-│   ├── run_controller.py
 │   ├── demo_memory_retrieval.py
 │   └── stress_test_memory.py
 │
