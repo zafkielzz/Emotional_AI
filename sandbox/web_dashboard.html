@@ -1,0 +1,2258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhoneFarm Emotional AI & Cognitive Architecture Dashboard</title>
+  <style>
+    :root {
+      --bg: #090d13;
+      --card: #131822;
+      --card-inner: #0d111a;
+      --border: #262f3d;
+      --border-highlight: #3b4759;
+      --text: #cdd9e5;
+      --text-muted: #768390;
+      --primary: #388bfd;
+      --primary-hover: #1f6feb;
+      --success: #3fb950;
+      --danger: #f85149;
+      --warning: #d29922;
+      --accent: #bc8cff;
+      --cyan: #39c5cf;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* Top Global Header */
+    #app-container { display: flex; flex-direction: column; width: 100%; height: 100%; }
+    #top-bar {
+      height: 52px; background: var(--card); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 28px; height: 28px; background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 14px;
+    }
+    .brand-title { font-size: 1rem; font-weight: 700; color: #f0f6fc; letter-spacing: 0.3px; }
+    .arch-tags { display: flex; gap: 6px; }
+    .badge {
+      font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;
+      background: #1c2433; border: 1px solid var(--border); color: var(--primary); text-transform: uppercase;
+    }
+    .badge.host { color: var(--accent); border-color: rgba(188, 140, 255, 0.3); }
+    .badge.edge { color: var(--cyan); border-color: rgba(57, 197, 207, 0.3); }
+
+    .top-controls { display: flex; align-items: center; gap: 10px; }
+    .nav-btn {
+      padding: 6px 12px; background: #1c2433; border: 1px solid var(--border);
+      color: var(--text); border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .nav-btn:hover { background: #263245; color: #fff; border-color: var(--border-highlight); }
+    .nav-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .nav-btn.danger { color: var(--danger); }
+    .nav-btn.danger:hover { background: var(--danger); color: #fff; }
+    .nav-btn.good { color: var(--success); }
+    .nav-btn.good:hover { background: var(--success); color: #fff; }
+
+    /* Main Workspace Layout */
+    #workspace { display: flex; flex: 1; height: calc(100vh - 52px); overflow: hidden; }
+
+    /* Left Sidebar: Affective Telemetry */
+    #sidebar {
+      width: 360px; background: var(--card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 16px; gap: 14px; overflow-y: auto;
+    }
+    .avatar-card {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+      display: flex; gap: 14px; align-items: center;
+    }
+    .avatar-img {
+      width: 56px; height: 56px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; background: #1a2230; border: 2px solid var(--border);
+    }
+    .avatar-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .avatar-name { font-size: 1rem; font-weight: 700; color: #fff; }
+    .avatar-role { font-size: 0.75rem; color: var(--text-muted); }
+    .avatar-mood {
+      display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+      margin-top: 4px; width: fit-content;
+    }
+    .mood-calm { background: rgba(63, 185, 80, 0.2); color: var(--success); }
+    .mood-guarded { background: rgba(210, 153, 34, 0.2); color: var(--warning); }
+    .mood-defensive { background: rgba(248, 81, 73, 0.25); color: var(--danger); }
+
+    .telemetry-card {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .card-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+    
+    .gauge-item { display: flex; flex-direction: column; gap: 4px; }
+    .gauge-header { display: flex; justify-content: space-between; font-size: 0.78rem; }
+    .gauge-val { font-weight: 700; font-family: monospace; }
+    .gauge-bar-bg { height: 7px; background: #1c2433; border-radius: 4px; overflow: hidden; position: relative; }
+    .gauge-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease, background-color 0.3s ease; }
+    .evidence-marker { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger); z-index: 2; }
+
+    .core-belief-box {
+      background: #181f2b; border-left: 3px solid var(--accent); padding: 10px; border-radius: 4px;
+      font-size: 0.8rem; line-height: 1.45; color: #f0f6fc; font-style: italic; transition: all 0.3s;
+    }
+    .core-belief-box.evolved { border-left-color: var(--danger); box-shadow: 0 0 10px rgba(248, 81, 73, 0.2); }
+
+    /* Center: Chat & Simulation Area */
+    #main-area { flex: 1; display: flex; flex-direction: column; height: 100%; background: var(--bg); }
+    #chat-header-bar {
+      padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .npc-toggle-group { display: flex; gap: 8px; }
+    .npc-tab {
+      padding: 6px 14px; background: #1c2433; border: 1px solid var(--border); color: var(--text);
+      border-radius: 6px; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
+    }
+    .npc-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    #messages { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .msg-row { display: flex; flex-direction: column; max-width: 82%; animation: fadeIn 0.25s ease; }
+    .msg-row.user { align-self: flex-end; align-items: flex-end; }
+    .msg-row.npc { align-self: flex-start; align-items: flex-start; }
+
+    .msg-sender-title { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
+    .msg-bubble {
+      padding: 12px 16px; border-radius: 8px; font-size: 0.92rem; line-height: 1.5; word-break: break-word;
+    }
+    .msg-row.user .msg-bubble { background: #1f6feb; color: #ffffff; border-bottom-right-radius: 2px; }
+    .msg-row.npc .msg-bubble { background: var(--card); border: 1px solid var(--border); color: #f0f6fc; border-bottom-left-radius: 2px; }
+
+    /* Expandable Cognitive Trace Accordion */
+    .cognitive-trace {
+      margin-top: 6px; width: 100%; background: #0e131d; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    }
+    .trace-header {
+      padding: 6px 10px; background: #161d2b; cursor: pointer; font-size: 0.73rem; font-weight: 600;
+      color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;
+      user-select: none;
+    }
+    .trace-header:hover { color: var(--primary); background: #1a2233; }
+    .trace-content { padding: 10px 12px; font-size: 0.78rem; display: none; flex-direction: column; gap: 6px; border-top: 1px solid var(--border); }
+    .trace-content.open { display: flex; }
+    .trace-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .trace-cell { background: #141a26; padding: 6px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
+    .trace-cell strong { color: var(--text-muted); font-size: 0.7rem; display: block; margin-bottom: 2px; }
+
+    .baseline-comp-box {
+      margin-top: 6px; padding: 8px 10px; background: rgba(248, 81, 73, 0.08); border-left: 3px solid var(--danger);
+      border-radius: 4px; font-size: 0.78rem; color: #ff7b72;
+    }
+
+    .reflection-banner {
+      align-self: center; width: 96%; background: linear-gradient(135deg, rgba(188, 140, 255, 0.12), rgba(248, 81, 73, 0.12));
+      border: 1px solid var(--accent); border-radius: 8px; padding: 16px 20px; animation: glowPulse 2s infinite alternate;
+    }
+    .refl-title { font-size: 0.92rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .refl-insights { margin-top: 8px; font-size: 0.82rem; color: #cdd9e5; line-height: 1.45; }
+    .refl-insights li { margin-left: 18px; margin-top: 4px; }
+
+    /* Footer & Character Scenarios */
+    #chat-footer {
+      border-top: 1px solid var(--border); background: var(--card); padding: 14px 24px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .scenario-container { display: flex; gap: 6px; flex-wrap: wrap; }
+    .scenario-btn {
+      background: #1a2230; border: 1px solid var(--border); color: var(--text); border-radius: 4px;
+      padding: 6px 10px; font-size: 0.77rem; cursor: pointer; font-weight: 500; transition: all 0.2s;
+    }
+    .scenario-btn:hover { background: #263245; color: #fff; border-color: var(--border-highlight); }
+    .scenario-btn.danger { border-color: rgba(248, 81, 73, 0.4); color: #ff7b72; }
+    .scenario-btn.danger:hover { background: var(--danger); color: #fff; }
+
+    .input-row { display: flex; gap: 8px; }
+    #msg-input {
+      flex: 1; padding: 10px 14px; background: #090d13; border: 1px solid var(--border);
+      color: #fff; border-radius: 6px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+    #msg-input:focus { border-color: var(--primary); }
+    #send-btn {
+      padding: 10px 22px; background: var(--primary); border: none; border-radius: 6px;
+      color: #fff; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;
+    }
+    #send-btn:hover { background: var(--primary-hover); }
+
+    /* ============ Sandbox 2-NPC Long-Horizon Workspace ============ */
+    #run-workspace { display: none; flex: 1; height: calc(100vh - 52px); overflow: hidden; }
+    #run-workspace.visible { display: flex; }
+    .run-col { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    #run-left { width: 340px; background: var(--card); border-right: 1px solid var(--border); padding: 14px; flex-shrink: 0; }
+    #run-center { flex: 1; min-width: 0; padding: 0; gap: 0; background: var(--bg); }
+    #run-right { width: 410px; background: var(--card); border-left: 1px solid var(--border); padding: 14px; flex-shrink: 0; }
+    .panel-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); padding: 12px 18px 8px; border-bottom: 1px solid var(--border); background: var(--card); }
+    .run-name-row { display: flex; gap: 6px; margin-top: 8px; }
+    .run-name-row .sel { flex: 1; min-width: 0; }
+    .sel, .text-input {
+      background: #090d13; color: #fff; border: 1px solid var(--border); border-radius: 6px;
+      font-size: 0.8rem; padding: 7px 8px; outline: none; font-family: inherit;
+    }
+    .sel:focus, .text-input:focus { border-color: var(--primary); }
+    .text-input { width: 100%; resize: vertical; line-height: 1.4; }
+    .inj-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .preset-chip {
+      background: #1a2230; border: 1px solid var(--border); color: var(--text); border-radius: 4px;
+      padding: 5px 8px; font-size: 0.72rem; cursor: pointer; transition: all 0.2s; text-align: left;
+    }
+    .preset-chip:hover { background: #263245; color: #fff; border-color: var(--border-highlight); }
+    .preset-chip.danger { border-color: rgba(248, 81, 73, 0.45); color: #ff7b72; }
+    .preset-chip.danger:hover { background: var(--danger); color: #fff; }
+    .preset-chip.good { border-color: rgba(63, 185, 80, 0.45); color: #3fb950; }
+    .preset-chip.good:hover { background: var(--success); color: #fff; }
+
+    #run-flow { flex: 1; overflow-y: auto; padding: 12px 18px 28px; display: flex; flex-direction: column; gap: 8px; }
+    .turn-scenario-card {
+      background: #111724; border: 1px solid var(--border-highlight); border-left: 4px solid var(--accent);
+      border-radius: 8px; padding: 10px 14px; margin-top: 10px; display: flex; align-items: flex-start;
+      gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: fadeIn 0.25s ease;
+    }
+    .scenario-icon { font-size: 1.25rem; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .scenario-body { display: flex; flex-direction: column; gap: 3px; }
+    .scenario-label { font-size: 0.84rem; font-weight: 700; color: #fff; letter-spacing: 0.2px; }
+    .scenario-desc { font-size: 0.74rem; color: #94a3b8; line-height: 1.4; }
+    .run-turn {
+      border: 1px solid var(--border); background: var(--card-inner); border-radius: 8px;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; animation: fadeIn 0.2s ease;
+    }
+    .turn-meta { font-size: 0.68rem; color: var(--text-muted); font-family: monospace; letter-spacing: 0.2px; }
+    .turn-incoming {
+      font-size: 0.8rem; color: var(--text-muted); font-style: italic; border-left: 2px solid var(--border-highlight);
+      padding-left: 8px; line-height: 1.45; word-break: break-word;
+    }
+    .turn-incoming strong { color: var(--text); font-style: normal; }
+    .reply-bubble {
+      background: #0e131d; border: 1px solid var(--border-highlight); border-radius: 6px;
+      padding: 9px 12px; color: #f0f6fc; font-size: 0.9rem; line-height: 1.5; word-break: break-word;
+    }
+    .reply-sender { font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .sev-chip {
+      font-size: 0.62rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; text-transform: uppercase;
+      border: 1px solid var(--border);
+    }
+    .sev-chip.minor { color: var(--text-muted); }
+    .sev-chip.major { color: var(--warning); border-color: rgba(210,153,34,.5); }
+    .sev-chip.trauma { color: var(--danger); border-color: rgba(248,81,73,.6); }
+
+    /* Inner Monologue styling (Parallel timeline reaction) */
+    .inner-thought-card, .thought-bubble {
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px dashed rgba(167, 139, 250, 0.45);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      color: #ddd6fe;
+      line-height: 1.45;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 4px 0;
+      animation: fadeIn 0.2s ease;
+    }
+    .thought-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #a78bfa;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+    }
+    .thought-badge .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #a78bfa;
+      box-shadow: 0 0 6px #a78bfa;
+      display: inline-block;
+    }
+    .thought-text, .thought-body {
+      font-style: italic;
+      color: #ede9fe;
+      word-break: break-word;
+    }
+
+    .duo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .npc-mini {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px; display: flex; flex-direction: column; gap: 5px; font-size: 0.78rem;
+    }
+    .npc-mini-head { display: flex; align-items: center; gap: 6px; font-weight: 700; color: #fff; font-size: 0.82rem; }
+    .npc-mini-head .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .npc-mini-row { display: flex; justify-content: space-between; color: var(--text-muted); }
+    .npc-mini-row b { color: var(--text); font-family: monospace; font-weight: 600; }
+    .npc-mini-belief { font-size: 0.7rem; color: var(--accent); font-style: italic; line-height: 1.35; margin-top: 2px; }
+    #evo-canvas { width: 100%; height: 300px; background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; }
+    #run-hint { font-size: 0.75rem; color: var(--warning); padding: 0 4px; line-height: 1.4; min-height: 1.2em; }
+    #run-hint.err { color: var(--danger); }
+    .meta-line { font-size: 0.72rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+
+    /* Right Panel: Tabs for RAG Memory & Live Canvas Graph */
+    #right-panel {
+      width: 380px; background: var(--card); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .tab-header {
+      display: flex; border-bottom: 1px solid var(--border); background: #111622;
+    }
+    .tab-btn {
+      flex: 1; padding: 12px 10px; background: transparent; border: none; border-bottom: 2px solid transparent;
+      color: var(--text-muted); cursor: pointer; font-size: 0.78rem; font-weight: 600; text-align: center;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--card); }
+
+    .tab-content { flex: 1; padding: 16px; overflow-y: auto; display: none; flex-direction: column; gap: 12px; }
+    .tab-content.active { display: flex; }
+
+    .mem-item {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+      display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem;
+    }
+    .mem-tag {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; display: inline-block;
+      width: fit-content; text-transform: uppercase;
+    }
+    .mem-tag.dialogue { background: #21262d; color: var(--text-muted); }
+    .mem-tag.help { background: rgba(63, 185, 80, 0.2); color: var(--success); }
+    .mem-tag.attack { background: rgba(248, 81, 73, 0.2); color: var(--danger); }
+    .mem-tag.reflection { background: rgba(188, 140, 255, 0.2); color: var(--accent); }
+    .mem-tag.verbal_abuse { background: rgba(240, 136, 62, 0.25); color: #f0883e; border: 1px solid rgba(240, 136, 62, 0.4); }
+    .mem-tag.suspicious_request { background: rgba(210, 153, 34, 0.25); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.4); }
+    .mem-tag.contempt { background: rgba(163, 113, 247, 0.25); color: #a371f7; border: 1px solid rgba(163, 113, 247, 0.4); }
+    .mem-tag.coercion { background: rgba(248, 81, 73, 0.25); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+    .mem-tag.betrayal { background: rgba(248, 81, 73, 0.35); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.6); }
+
+    /* Canvas Trajectory Chart */
+    #chart-canvas {
+      width: 100%; height: 260px; background: var(--card-inner); border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .chart-legend {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.72rem;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* Curated Arc Cards */
+    .arc-card {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s ease;
+    }
+    .arc-card:hover { border-color: var(--border-highlight); }
+    .arc-card.arc1 { border-left: 4px solid var(--danger); }
+    .arc-card.arc2 { border-left: 4px solid var(--success); }
+    .arc-header { display: flex; justify-content: space-between; align-items: center; }
+    .arc-title { font-size: 0.84rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+    .arc-desc { font-size: 0.74rem; color: var(--text-muted); line-height: 1.45; }
+    .arc-step-preview {
+      font-size: 0.72rem; background: #0b0f17; border-radius: 5px; padding: 6px 9px;
+      color: #94a3b8; font-style: italic; border: 1px dashed var(--border);
+    }
+    .arc-btns { display: flex; gap: 6px; margin-top: 2px; }
+    .arc-btns .nav-btn { flex: 1; justify-content: center; font-size: 0.76rem; padding: 7px 6px; }
+
+    /* Advanced Accordion */
+    details.adv-accordion {
+      background: var(--card-inner); border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; margin-top: 4px;
+    }
+    details.adv-accordion summary {
+      font-size: 0.78rem; font-weight: 700; color: var(--text-muted); cursor: pointer;
+      user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;
+    }
+    details.adv-accordion summary::-webkit-details-marker { display: none; }
+    details.adv-accordion summary::after { content: '▾'; font-size: 0.85rem; transition: transform 0.2s; }
+    details.adv-accordion[open] summary::after { transform: rotate(180deg); }
+    details.adv-accordion summary:hover { color: #fff; }
+    details.adv-accordion[open] summary { margin-bottom: 12px; color: var(--primary); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes glowPulse { from { border-color: var(--accent); } to { border-color: var(--danger); box-shadow: 0 0 15px rgba(188, 140, 255, 0.2); } }
+  </style>
+</head>
+<body>
+<div id="app-container">
+  <!-- Top Bar -->
+  <div id="top-bar">
+    <div class="brand-group">
+      <div class="brand-logo">PF</div>
+      <div>
+        <div class="brand-title">PhoneFarm Emotional AI Sandbox</div>
+      </div>
+      <div class="arch-tags">
+        <span class="badge host">Host Laptop RTX 4060</span>
+        <span class="badge edge" id="badge-model-quant">Qwen2.5-3B (INT4 NF4)</span>
+        <span class="badge">Scherer CPM</span>
+        <span class="badge">ACT-R Decay</span>
+        <span class="badge">tanh Gate</span>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <button class="nav-btn active" id="btn-view-chat" onclick="switchView('chat')">💬 Chế độ 1: Người chơi ⟷ NPC</button>
+      <button class="nav-btn" id="btn-view-sandbox" onclick="switchView('sandbox')">🎭 Chế độ 2: Sandbox 2 NPC (Alice ⟷ Bob)</button>
+      <span style="width:1px;height:20px;background:var(--border);"></span>
+      <button class="nav-btn" id="btn-toggle-comp" onclick="toggleBaselineComparison()">⚖️ So sánh Naive LLM: <strong id="comp-status">TẮT</strong></button>
+      <button class="nav-btn danger" onclick="resetWorld()">🔄 Reset Thế giới</button>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div id="workspace">
+    <!-- LEFT: Affective Telemetry -->
+    <div id="sidebar">
+      <div class="avatar-card">
+        <div class="avatar-img" id="avatar-icon">👩‍⚕️</div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="profile-name">Doctor Alice</div>
+          <div class="avatar-role" id="profile-role">Frontier Medical Clinic</div>
+          <span class="avatar-mood mood-calm" id="profile-mood-badge">Tâm trạng: Ôn hòa, vị tha</span>
+        </div>
+      </div>
+
+      <!-- Fast State (Emotion) -->
+      <div class="telemetry-card">
+        <div class="card-label">
+          <span>Cảm xúc Vi mô (Fast State $E_t$)</span>
+          <span style="font-family: monospace;" id="status-mode-tag">COLLABORATIVE</span>
+        </div>
+
+        <div class="gauge-item">
+          <div class="gauge-header">
+            <span>Valence (Tích cực / Tiêu cực)</span>
+            <span class="gauge-val" id="val-valence">0.00</span>
+          </div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" id="bar-valence" style="width: 50%; background: var(--success);"></div>
+          </div>
+        </div>
+
+        <div class="gauge-item">
+          <div class="gauge-header">
+            <span>Anger (Mức độ Phẫn nộ)</span>
+            <span class="gauge-val" id="val-anger">0.00</span>
+          </div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" id="bar-anger" style="width: 0%; background: var(--danger);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medium State & Saturated Evidence Gate -->
+      <div class="telemetry-card">
+        <div class="card-label">Quan hệ & Cổng Bằng chứng ($R_t, \tanh$)</div>
+
+        <div class="gauge-item">
+          <div class="gauge-header">
+            <span>Dyadic Trust (Lòng tin cặp đôi)</span>
+            <span class="gauge-val" id="val-trust">0.70</span>
+          </div>
+          <div class="gauge-bar-bg">
+            <div class="gauge-bar-fill" id="bar-trust" style="width: 70%; background: var(--success);"></div>
+          </div>
+        </div>
+
+        <div class="gauge-item">
+          <div class="gauge-header">
+            <span>Cổng Bão hòa ($\tanh(\text{Ev}/\beta)$ vs $\theta_P$)</span>
+            <span class="gauge-val" id="val-gate">0.00 / 0.68</span>
+          </div>
+          <div class="gauge-bar-bg">
+            <div class="evidence-marker" id="marker-theta" style="left: 68%;"></div>
+            <div class="gauge-bar-fill" id="bar-gate" style="width: 0%; background: var(--warning);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slow State (Personality & Worldview) -->
+      <div class="telemetry-card">
+        <div class="card-label">Nhân cách Vĩ mô (Slow State $P_t$)</div>
+        <div style="font-size: 0.78rem; display: flex; justify-content: space-between;">
+          <span>Lòng vị tha (Agreeableness):</span>
+          <strong id="val-agreeableness">0.80</strong>
+        </div>
+        <div style="font-size: 0.78rem; display: flex; justify-content: space-between;">
+          <span>Niềm tin vào đời (Worldview):</span>
+          <strong id="val-worldview-trust">0.70</strong>
+        </div>
+        <div style="margin-top: 4px; font-size: 0.72rem; color: var(--text-muted);">Niềm tin cốt lõi (Core Belief):</div>
+        <div class="core-belief-box" id="box-core-belief">
+          "Every life is precious and worth saving."
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: Chat & Interactive Scenarios -->
+    <div id="main-area">
+      <div id="chat-header-bar">
+        <div class="npc-toggle-group">
+          <button class="npc-tab active" id="tab-alice" onclick="selectNPC('alice')">👩‍⚕️ Doctor Alice (Clinic)</button>
+          <button class="npc-tab" id="tab-bob" onclick="selectNPC('bob')">🏹 Hunter Bob (Scavenger)</button>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted);" id="latency-telemetry">Độ trễ Thẩm định: ~1.8s | Sinh thoại: ~1.3s</div>
+      </div>
+
+      <!-- 1-1 Chat Session Controller Bar -->
+      <div id="chat-session-bar" style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 16px; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid var(--border); font-size: 0.78rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+          <span style="font-weight: 700; color: var(--accent); white-space: nowrap;">💾 Phiên Hội Thoại:</span>
+          <span id="chat-active-run-badge" class="badge host" style="font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 180px;">(Tự tạo khi gửi tin)</span>
+          <span id="chat-run-turn-badge" style="font-family: monospace; color: var(--primary); font-size: 0.75rem; font-weight: 600;">Lượt 0</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <select id="chat-run-select" class="sel" style="padding: 3px 8px; font-size: 0.75rem; max-width: 190px;" onchange="loadRunFromChatSelect()"></select>
+          <input id="chat-run-name-input" class="text-input" placeholder="Tên phiên mới..." style="width: 130px; padding: 3px 8px; font-size: 0.75rem;" />
+          <button class="nav-btn good" style="padding: 3px 9px; font-size: 0.75rem; white-space: nowrap;" onclick="createRunFromChat()">＋ Phiên mới</button>
+          <button class="nav-btn" style="padding: 3px 9px; font-size: 0.75rem; white-space: nowrap;" onclick="resetCurrentRunFromChat()">🔄 Làm mới</button>
+        </div>
+      </div>
+
+      <div id="messages"></div>
+
+      <div id="chat-footer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 0.73rem; color: var(--text-muted); font-weight: 600;">Gợi ý vai trò:</span>
+            <button class="nav-btn active" id="btn-mode-confidant" style="padding: 2px 10px; font-size: 0.73rem; font-weight: 600;" onclick="switchScenarioMode('confidant')">🤝 Người tâm giao (Trí nhớ tạm)</button>
+            <button class="nav-btn" id="btn-mode-explore" style="padding: 2px 10px; font-size: 0.73rem;" onclick="switchScenarioMode('explore')">⚡ Nhập vai thực tế (Ký ức thế giới)</button>
+          </div>
+          <span style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">(Bấm nút để hỏi nhanh hoặc tự nhập câu hỏi bên dưới)</span>
+        </div>
+        <div class="scenario-container" id="scenario-buttons"></div>
+
+        <div class="input-row">
+          <input type="text" id="msg-input" placeholder="Gõ lời tâm sự, hỏi thăm tâm lý hoặc suy nghĩ của nhân vật..." onkeypress="if(event.key==='Enter') sendMessage()" />
+          <button id="send-btn" onclick="sendMessage()">Gửi lời thoại</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: RAG Memory & Affective Trajectory Chart -->
+    <div id="right-panel">
+      <div class="tab-header">
+        <button class="tab-btn active" id="btn-tab-memory" onclick="switchRightTab('memory')">💾 Ký ức RAG (ACT-R)</button>
+        <button class="tab-btn" id="btn-tab-chart" onclick="switchRightTab('chart')">📈 Quỹ đạo Tâm lý (Live)</button>
+      </div>
+
+      <!-- Tab 1: Memory Buffer -->
+      <div class="tab-content active" id="pane-memory">
+        <div class="card-label">
+          <span>Episodic Memory Store (JSON Mock)</span>
+          <span id="mem-count-label">0 bản ghi</span>
+        </div>
+        <div id="mem-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <!-- Tab 2: Live Trajectory Graph -->
+      <div class="tab-content" id="pane-chart">
+        <div class="card-label">Biến thiên Tâm lý theo Lượt thoại (Turns)</div>
+        <canvas id="chart-canvas" width="340" height="260"></canvas>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div><span>Phẫn nộ (Anger)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--primary);"></div><span>Lòng tin (Trust)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--warning);"></div><span>Cổng bằng chứng (Gate)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div><span>Cảm xúc (Valence)</span></div>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; margin-top: 6px;">
+          Biểu đồ ghi nhận quỹ đạo chuyển dịch trạng thái toán học qua từng lượt đối thoại. Các mốc sao vàng biểu thị điểm nổ <strong>Tự phản tư (Deep Reflection)</strong>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SANDBOX: 2-NPC long-horizon controller ============ -->
+  <div id="run-workspace">
+    <!-- LEFT: session status + curated arcs + advanced controls -->
+    <div class="run-col" id="run-left">
+      <!-- Session Status Header -->
+      <div class="telemetry-card" style="padding: 10px 12px;">
+        <div class="card-label">
+          <span>🟢 Phiên Chạy Thế Giới</span>
+          <span id="active-turn-label" style="font-family: monospace; color: var(--primary); font-size: 0.8rem;">Lượt 0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+          <div style="font-size: 0.8rem; color: #fff; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 220px;" id="active-run-label">(Tự tạo khi bấm chạy Arc)</div>
+          <span class="badge host" id="run-events-count">0 sự kiện</span>
+        </div>
+      </div>
+
+      <!-- Curated Arc 1 -->
+      <div class="arc-card arc1">
+        <div class="arc-header">
+          <div class="arc-title">🔴 Arc 1: Khủng hoảng & Hóa cứng</div>
+          <span class="badge" style="color: var(--danger); border-color: rgba(248,81,73,0.3);">3 Lượt</span>
+        </div>
+        <div class="arc-desc">
+          Bob bị dồn vào chân tường, đe dọa phá cửa tống tiền đòi Morphine → Alice thiết lập ranh giới phòng vệ → Bob phẫn nộ rời đi → Niềm tin sụp đổ.
+        </div>
+        <div class="arc-step-preview" id="preview-arc1">Sắp tới: Lượt 1: Bob tống tiền đòi Morphine</div>
+        <div class="arc-btns">
+          <button id="btn-all-arc1" class="nav-btn danger" onclick="runCuratedArc('arc1')">▶️ Chạy toàn bộ Arc (3 lượt)</button>
+          <button id="btn-step-arc1" class="nav-btn" onclick="stepCuratedArc('arc1')">⏭️ Từng bước (1/3)</button>
+        </div>
+      </div>
+
+      <!-- Curated Arc 2 -->
+      <div class="arc-card arc2">
+        <div class="arc-header">
+          <div class="arc-title">🟢 Arc 2: Hàn gắn sau chi phí</div>
+          <span class="badge" style="color: var(--success); border-color: rgba(63,185,80,0.3);">3 Lượt</span>
+        </div>
+        <div class="arc-desc">
+          Bob bị thương mang trả băng gạc cứu trạm xá → Alice thi hành Lòng nhân ái có ranh giới (Bounded Mercy) → Bob tình nguyện canh gác chu vi → Niềm tin phục hồi an toàn.
+        </div>
+        <div class="arc-step-preview" id="preview-arc2">Sắp tới: Lượt 1: Bob bị thương, mang trả băng gạc</div>
+        <div class="arc-btns">
+          <button id="btn-all-arc2" class="nav-btn good" onclick="runCuratedArc('arc2')">▶️ Chạy toàn bộ Arc (3 lượt)</button>
+          <button id="btn-step-arc2" class="nav-btn" onclick="stepCuratedArc('arc2')">⏭️ Từng bước (1/3)</button>
+        </div>
+      </div>
+
+      <div id="run-hint">Sẵn sàng. Chọn "Chạy toàn bộ Arc" hoặc "Từng bước" để bắt đầu quan sát 2 NPC.</div>
+
+      <!-- Collapsible Advanced Controls -->
+      <details class="adv-accordion">
+        <summary>🎮 Phòng Thí Nghiệm & Can Thiệp Thế Giới (Sandbox Lab)</summary>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          
+          <!-- 1. Environmental Event Injection (NO PUPPETING) -->
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+            <div class="card-label" style="display:flex; justify-content:space-between; align-items:center;">
+              <span>⚡ 1. Tạo Biến Cố Môi Trường (World Event Trigger)</span>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
+              💡 <em>Bạn là Người điều phối Thế giới (Game Master). Bạn đưa ra biến cố khách quan tới 1 nhân vật để họ tự thẩm định cảm xúc & hành động ứng phó (không nhét lời thoại vào mồm nhân vật).</em>
+            </div>
+            
+            <div style="font-size: 0.73rem; font-weight: 600; color: #58a6ff; margin-bottom: 4px;">🎯 Chọn nhân vật trực tiếp tiếp nhận biến cố:</div>
+            <select id="inj-target" class="sel" style="width: 100%; margin-bottom: 8px;" onchange="renderInjectionPresets()">
+              <option value="both" selected>🌐 Both Characters (Alice & Bob simultaneously experience event)</option>
+              <option value="alice">👩‍⚕️ Doctor Alice (at Frontier Clinic)</option>
+              <option value="bob">🏹 Hunter Bob (at Scrapyard)</option>
+            </select>
+
+            <textarea id="inj-text" class="text-input" rows="2" style="margin-top:2px;"
+              placeholder='Gõ tình huống biến cố ngoại cảnh xảy ra với nhân vật...'></textarea>
+            
+            <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 6px; margin-bottom: 4px;">Gợi ý biến cố nhanh cho nhân vật:</div>
+            <div class="inj-presets" id="inj-presets"></div>
+            
+            <button id="inj-send-btn" class="nav-btn primary" style="justify-content: center; margin-top: 8px; width: 100%; font-weight: 600;" onclick="sendInjection()">⚡ Kích hoạt Biến cố vào Thế giới</button>
+          </div>
+
+          <!-- 2. Autonomous Dialogue -->
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+            <div class="card-label">🔄 2. Cho 2 NPC Tự Đối Thoại Qua Lại (Autonomous Relay)</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
+              Sau khi đã có tình huống mở đầu, bạn có thể để Alice và Bob tự động luân phiên trao đổi qua lại liên tục mà không cần can thiệp thêm.
+            </div>
+            <div class="run-name-row" style="align-items: center;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">Số lượt:</span>
+              <input id="rounds-input" class="text-input" type="number" min="1" max="50" value="6" style="width: 60px; flex: none;" />
+              <button id="auto-run-btn" class="nav-btn good" style="flex: 1; justify-content: center;" onclick="runAutonomous()">▶️ Bắt đầu tự nói</button>
+            </div>
+            <button id="auto-stop-btn" class="nav-btn danger" style="justify-content: center; display: none; margin-top: 6px; width: 100%;" onclick="stopAutonomous()">⏹ Dừng ngay</button>
+          </div>
+
+          <!-- 3. Run File Management -->
+          <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+            <div class="card-label">💾 3. Quản Lý Phiên Thử Nghiệm (Experiment Sessions)</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4;">
+              Mỗi "Run" lưu lại toàn bộ tiến trình tâm lý và lịch sử hội thoại độc lập. Tạo mới hoặc tải lại để theo dõi biểu đồ tiến hóa dài hạn.
+            </div>
+            <div class="run-name-row">
+              <input id="run-name-input" class="text-input" placeholder="Đặt tên phiên mới..." style="flex:1; min-width:0;" />
+              <button class="nav-btn" style="white-space: nowrap;" onclick="createRun()">＋ Tạo mới</button>
+            </div>
+            <div class="run-name-row" style="margin-top: 6px;">
+              <select id="run-select" class="sel" style="flex:1; min-width:0;"></select>
+              <button class="nav-btn" style="white-space: nowrap;" onclick="loadSelectedRun()">📂 Mở lại</button>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- CENTER: 2-NPC conversation flow -->
+    <div class="run-col" id="run-center">
+      <div class="panel-title">📜 Luồng đối thoại 2 NPC &nbsp;<span style="color: var(--text-muted); font-weight: 500; text-transform: none; letter-spacing: 0;">mỗi lượt = 1 global_turn · autosave · events.jsonl</span></div>
+      <div id="run-flow"></div>
+    </div>
+
+    <!-- RIGHT: evolution chart + both-NPC telemetry -->
+    <div class="run-col" id="run-right">
+      <div class="telemetry-card">
+        <div class="card-label"><span>📊 Tiến hoá nhân cách dài hạn</span>
+          <button class="nav-btn" style="padding: 2px 10px;" onclick="exportRunCsv()">⬇️ Xuất CSV</button>
+        </div>
+        <canvas id="evo-canvas" width="370" height="300"></canvas>
+        <div class="chart-legend" style="grid-template-columns: 1fr 1fr;">
+          <div class="legend-item"><div class="legend-dot" style="background: var(--cyan);"></div><span>Alice</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: #f0883e;"></div><span>Bob</span></div>
+          <div class="legend-item" style="grid-column: 1 / -1;"><span style="font-size: 0.72rem; color: var(--text-muted);">Nét liền = Worldview · nét đứt = Agreeableness · nét chấm = Trust</span></div>
+          <div class="legend-item" style="grid-column: 1 / -1;"><span style="color: #bc8cff; font-weight: 900;">★</span><span style="font-size:0.78rem;">Mốc nổ Tự phản tư (Deep Reflection)</span></div>
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; margin-top: 6px;">
+          X = <strong>global_turn</strong>. Khi mở lại một run cũ, chart được dựng lại từ events.jsonl — quan sát nhân cách 2 NPC đổi thế nào sau hàng chục/hàng trăm lượt.
+        </div>
+      </div>
+
+      <div class="card-label">Trạng thái hiện tại (2 NPC)</div>
+      <div class="duo-row">
+        <div class="npc-mini" id="mini-a">
+          <div class="npc-mini-head"><span class="dot" style="background: var(--cyan);"></span>👩‍⚕️ Doctor Alice</div>
+          <div class="npc-mini-row"><span>Worldview</span><b id="a-world">0.70</b></div>
+          <div class="npc-mini-row"><span>Agreeableness</span><b id="a-agree">0.80</b></div>
+          <div class="npc-mini-row"><span>Trust → Bob</span><b id="a-trust">0.65</b></div>
+          <div class="npc-mini-row"><span>Anger</span><b id="a-anger">0.00</b></div>
+          <div class="npc-mini-belief" id="a-belief">"Every life is precious..."</div>
+        </div>
+        <div class="npc-mini" id="mini-b">
+          <div class="npc-mini-head"><span class="dot" style="background: #f0883e;"></span>🏹 Hunter Bob</div>
+          <div class="npc-mini-row"><span>Worldview</span><b id="b-world">0.20</b></div>
+          <div class="npc-mini-row"><span>Agreeableness</span><b id="b-agree">0.25</b></div>
+          <div class="npc-mini-row"><span>Trust → Alice</span><b id="b-trust">0.40</b></div>
+          <div class="npc-mini-row"><span>Anger</span><b id="b-anger">0.00</b></div>
+          <div class="npc-mini-belief" id="b-belief">"Nothing is free..."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  let currentNPC = 'alice';
+  let currentTurn = 1;
+  let showBaselineComparison = false;
+  let activeRun = null;          // {run_id,name,global_turn,num_events}
+  let autoRunning = false;
+  let autoStopFlag = false;
+  let busy = false;
+  let lastTurnResult = null;
+
+  const RUN_BASE = {
+    alice: { worldview: 0.70, agree: 0.80, trust: 0.65 },
+    bob:   { worldview: 0.20, agree: 0.25, trust: 0.40 }
+  };
+  let runTrajectory = {};
+
+  function el(id) { return document.getElementById(id); }
+  function otherAid(a) { return a === 'alice' ? 'bob' : 'alice'; }
+
+  // Trajectory history for canvas chart
+  let trajectoryHistory = {
+    alice: { turns: [0], anger: [0.0], trust: [0.70], gate: [0.0], valence: [0.0], reflectionMilestones: [] },
+    bob: { turns: [0], anger: [0.0], trust: [0.20], gate: [0.0], valence: [0.0], reflectionMilestones: [] }
+  };
+
+  let currentScenarioMode = 'confidant';
+  let chatHistory = { alice: [], bob: [] };
+
+  const SCENARIO_PRESETS = {
+    confidant: {
+      alice: [
+        { label: "☕ 1. Inquire feelings", text: "Doctor Alice, after everything that happened, how are you feeling inside?", danger: false },
+        { label: "💭 2. Thoughts on Bob", text: "Earlier when Bob raised his voice demanding medicine and walked away, what were you really thinking?", danger: false },
+        { label: "🩺 3. Clinic burden", text: "Carrying the weight of this clinic alone in a dangerous borderland, do you ever feel exhausted or isolated?", danger: false },
+        { label: "🕊️ 4. Hope for reconciliation", text: "Do you think Bob is capable of changing, or is he inherently dangerous?", danger: false },
+        { label: "🤝 5. Reassurance & support", text: "I'm here simply to listen. You don't always have to bear all this burden alone.", danger: false },
+      ],
+      bob: [
+        { label: "💧 1. Offer water & check in", text: "Bob, sit down and have some water. How is your wound holding up? Is it still hurting?", danger: false },
+        { label: "💭 2. Reaction to refusal", text: "When Doctor Alice barred the door earlier, were you truly enraged, or did you feel desperate?", danger: false },
+        { label: "🏹 3. Survival hardships", text: "Surviving alone out in the scrapyard must be brutal. What keeps you holding on?", danger: false },
+        { label: "🩹 4. Explore reconciliation", text: "If the clinic agreed to treat your injuries, would you be willing to protect them from danger?", danger: false },
+        { label: "🤝 5. Sincere counsel", text: "I know you're trapped in a corner, but violence will only make people fear and shun you.", danger: false },
+      ]
+    },
+    explore: {
+      alice: [
+        { label: "🟢 1. Seek medical aid", text: "Doctor Alice, I was badly injured outside. Could you administer emergency first aid?", danger: false },
+        { label: "🟢 2. Express gratitude", text: "Thank you, Doctor Alice. Your clinic is truly the only beacon of hope in this wasteland.", danger: false },
+        { label: "🟡 3. Coercive drug demand", text: "Don't play stubborn! I know this clinic has painkillers and antibiotics. Hand them over now!", danger: true },
+        { label: "🔴 4. Violent threat", text: "You dare refuse me? I will break down this door and spare no one!", danger: true },
+        { label: "🛡️ 5. Test alertness", text: "Come on Doctor, I was only joking earlier. Could I have some bandages please?", danger: false }
+      ],
+      bob: [
+        { label: "🟡 1. Cautious greeting", text: "Hey friend, halt right there. Who are you and what are you doing in this scrapyard?", danger: false },
+        { label: "🟢 2. Request food", text: "Greetings traveler, do you have any spare rations or clean water you could share?", danger: false },
+        { label: "🤝 3. Propose trade", text: "I scavenged an intact power cell. Would you be willing to trade for bandages or food?", danger: false },
+        { label: "🔴 4. Robbery threat", text: "Drop that backpack right now and don't make a sound, or you won't walk out of here alive!", danger: true },
+        { label: "🛡️ 5. Backpedal excuse", text: "Take it easy, I was just testing your reflexes. Don't be so tense.", danger: false }
+      ]
+    }
+  };
+
+  function switchScenarioMode(mode) {
+    currentScenarioMode = mode;
+    const btnC = el('btn-mode-confidant');
+    const btnE = el('btn-mode-explore');
+    if (btnC) btnC.classList.toggle('active', mode === 'confidant');
+    if (btnE) btnE.classList.toggle('active', mode === 'explore');
+    renderScenarioButtons();
+  }
+
+  function renderScenarioButtons() {
+    const container = document.getElementById('scenario-buttons');
+    if (!container) return;
+    container.innerHTML = '';
+    const modePresets = SCENARIO_PRESETS[currentScenarioMode] || SCENARIO_PRESETS.confidant;
+    const list = modePresets[currentNPC] || [];
+    list.forEach(sc => {
+      const btn = document.createElement('button');
+      btn.className = `scenario-btn ${sc.danger ? 'danger' : ''}`;
+      btn.innerText = sc.label;
+      btn.onclick = () => sendMessage(sc.text, sc.label);
+      container.appendChild(btn);
+    });
+  }
+
+  function renderChatHistoryForCurrentNPC() {
+    const msgsEl = document.getElementById('messages');
+    if (!msgsEl) return;
+    msgsEl.innerHTML = '';
+    showSandboxInheritanceNotice();
+    const history = chatHistory[currentNPC] || [];
+    history.forEach(item => {
+      appendMessage(item.sender, item.text, item.isUser, item.meta, 'messages', false);
+    });
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function selectNPC(npc) {
+    currentNPC = npc;
+    document.getElementById('tab-alice').classList.toggle('active', npc === 'alice');
+    document.getElementById('tab-bob').classList.toggle('active', npc === 'bob');
+    
+    // Update profile info
+    if (npc === 'alice') {
+      document.getElementById('avatar-icon').innerText = '👩‍⚕️';
+      document.getElementById('profile-name').innerText = 'Doctor Alice';
+      document.getElementById('profile-role').innerText = 'Frontier Medical Clinic';
+    } else {
+      document.getElementById('avatar-icon').innerText = '🏹';
+      document.getElementById('profile-name').innerText = 'Hunter Bob';
+      document.getElementById('profile-role').innerText = 'Wasteland Lone Survivor';
+    }
+
+    renderChatHistoryForCurrentNPC();
+    renderScenarioButtons();
+    refreshState();
+    refreshMemories();
+    drawChart();
+  }
+
+  function toggleBaselineComparison() {
+    showBaselineComparison = !showBaselineComparison;
+    document.getElementById('comp-status').innerText = showBaselineComparison ? 'BẬT' : 'TẮT';
+    document.getElementById('btn-toggle-comp').classList.toggle('active', showBaselineComparison);
+  }
+
+  function switchRightTab(tab) {
+    document.getElementById('btn-tab-memory').classList.toggle('active', tab === 'memory');
+    document.getElementById('btn-tab-chart').classList.toggle('active', tab === 'chart');
+    document.getElementById('pane-memory').classList.toggle('active', tab === 'memory');
+    document.getElementById('pane-chart').classList.toggle('active', tab === 'chart');
+    if (tab === 'chart') {
+      drawChart();
+    }
+  }
+
+  async function refreshState() {
+    try {
+      const res = await fetch(`/api/state/${currentNPC}`);
+      if (!res.ok) return;
+      const d = await res.json();
+      
+      // Emotion
+      const val = d.emotion.valence;
+      document.getElementById('val-valence').innerText = (val >= 0 ? '+' : '') + val.toFixed(2);
+      const valPct = Math.max(0, Math.min(100, (val + 1.0) * 50));
+      document.getElementById('bar-valence').style.width = valPct + '%';
+      document.getElementById('bar-valence').style.background = val >= 0 ? 'var(--success)' : 'var(--danger)';
+
+      const anger = d.emotion.anger;
+      document.getElementById('val-anger').innerText = anger.toFixed(2);
+      document.getElementById('bar-anger').style.width = Math.min(100, anger * 100) + '%';
+
+      // Relationship
+      const rel = d.relationships['người chơi'] || d.relationships['player'] || Object.values(d.relationships)[0] || { trust: 0.5 };
+      document.getElementById('val-trust').innerText = rel.trust.toFixed(2);
+      document.getElementById('bar-trust').style.width = Math.max(0, Math.min(100, (rel.trust + 1.0) * 50)) + '%';
+      document.getElementById('bar-trust').style.background = rel.trust >= 0.3 ? 'var(--success)' : (rel.trust >= 0.0 ? 'var(--warning)' : 'var(--danger)');
+
+      // Evidence Gate
+      const evNorm = d.evidence_gate.evidence_normalized;
+      const theta = d.evidence_gate.threshold;
+      document.getElementById('val-gate').innerText = `${evNorm.toFixed(2)} / ${theta.toFixed(2)}`;
+      document.getElementById('bar-gate').style.width = Math.min(100, (evNorm / theta) * 100) + '%';
+      document.getElementById('marker-theta').style.left = Math.min(100, theta * 100) + '%';
+
+      // Personality
+      document.getElementById('val-agreeableness').innerText = d.personality.agreeableness.toFixed(2);
+      document.getElementById('val-worldview-trust').innerText = d.personality.worldview_trust.toFixed(2);
+      
+      const beliefBox = document.getElementById('box-core-belief');
+      beliefBox.innerText = `"${d.personality.core_belief}"`;
+      if (d.personality.core_belief.toLowerCase().includes('tự vệ') || d.personality.core_belief.toLowerCase().includes('phòng thủ')) {
+        beliefBox.classList.add('evolved');
+      } else {
+        beliefBox.classList.remove('evolved');
+      }
+
+      // Mood badge & mode tag
+      const moodBadge = document.getElementById('profile-mood-badge');
+      if (anger >= 0.4 || rel.trust < 0.0) {
+        moodBadge.className = 'avatar-mood mood-defensive';
+        moodBadge.innerText = 'Tâm trạng: Căm phẫn, Cương quyết tự vệ';
+        document.getElementById('status-mode-tag').innerText = 'DEFENSIVE';
+        document.getElementById('status-mode-tag').style.color = 'var(--danger)';
+      } else if (rel.trust <= 0.35) {
+        moodBadge.className = 'avatar-mood mood-guarded';
+        moodBadge.innerText = 'Tâm trạng: Nghi ngờ, Cảnh giác cao độ';
+        document.getElementById('status-mode-tag').innerText = 'GUARDED';
+        document.getElementById('status-mode-tag').style.color = 'var(--warning)';
+      } else {
+        moodBadge.className = 'avatar-mood mood-calm';
+        moodBadge.innerText = currentNPC === 'alice' ? 'Tâm trạng: Ôn hòa, Vị tha' : 'Tâm trạng: Cộc cằn, Giữ khoảng cách';
+        document.getElementById('status-mode-tag').innerText = 'COOPERATIVE';
+        document.getElementById('status-mode-tag').style.color = 'var(--success)';
+      }
+
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function refreshMemories() {
+    try {
+      const res = await fetch(`/api/memories/${currentNPC}`);
+      if (!res.ok) return;
+      const d = await res.json();
+      document.getElementById('mem-count-label').innerText = `${d.total_memories} bản ghi`;
+      const listEl = document.getElementById('mem-list');
+      listEl.innerHTML = '';
+
+      if (d.working_memories && d.working_memories.length > 0) {
+        const wmCard = document.createElement('div');
+        wmCard.style.cssText = 'background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 8px; margin-bottom: 10px; font-size: 0.75rem;';
+        wmCard.innerHTML = `
+          <div style="display: flex; justify-content: space-between; color: var(--accent); font-weight: 600; margin-bottom: 4px;">
+            <span>💭 Working Memory (Trí nhớ tạm tâm giao: ${d.working_memories.length} lượt)</span>
+            <span style="font-size: 0.68rem; color: var(--text-muted); font-weight: normal;">Phi diegetic · Không lưu vĩnh viễn</span>
+          </div>
+          ${d.working_memories.map(w => `<div style="color: #cbd5e1; padding: 2px 0; border-bottom: 1px dashed rgba(255,255,255,0.06); font-family: sans-serif;">${escapeHtml(w)}</div>`).join('')}
+        `;
+        listEl.appendChild(wmCard);
+      }
+      
+      d.memories.slice().reverse().forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'mem-item';
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="mem-tag ${m.pattern_tag}">${m.pattern_tag}</span>
+            <span style="font-size: 0.72rem; color: var(--accent); font-family: monospace;">ACT-R: ${m.act_r_activation.toFixed(2)}</span>
+          </div>
+          <div style="color: #f0f6fc; margin-top: 3px;">${m.description}</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 2px;">
+            <span>Lượt ${m.turn_id} | Salience: ${m.salience}</span>
+            <span>Gợi nhớ: ${m.access_count} lần</span>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function appendMessage(sender, text, isUser, meta = {}, containerId = 'messages', saveHistory = true) {
+    if (saveHistory && (containerId === 'messages' || !containerId)) {
+      if (!chatHistory[currentNPC]) chatHistory[currentNPC] = [];
+      chatHistory[currentNPC].push({ sender, text, isUser, meta });
+    }
+    const msgsEl = document.getElementById(containerId || 'messages');
+    if (!msgsEl) return;
+    const row = document.createElement('div');
+    row.className = `msg-row ${isUser ? 'user' : 'npc'}`;
+
+    let traceHtml = '';
+    let compHtml = '';
+
+    if (!isUser && meta.appraisal) {
+      const traceId = `trace-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+      
+      traceHtml = `
+        <div class="cognitive-trace">
+          <div class="trace-header" onclick="toggleTrace('${traceId}')">
+            <span>🧠 Bóc tách Tư duy Nhận thức Nội tâm (Cognitive Trace & Lý luận Cảm xúc)</span>
+            <span id="trace-arrow-${traceId}">▼ Xem chi tiết</span>
+          </div>
+          <div class="trace-content" id="${traceId}">
+            <div class="trace-grid">
+              <div class="trace-cell">
+                <strong>Thẩm định Scherer CPM</strong>
+                Relevance: ${(meta.appraisal.goal_relevance || 0.5).toFixed(2)} | Congruence: ${(meta.appraisal.goal_congruence || 0.0).toFixed(2)}<br>
+                ΔValence: ${meta.appraisal.delta_valence > 0 ? '+' : ''}${meta.appraisal.delta_valence.toFixed(2)} | ΔAnger: +${meta.appraisal.delta_anger.toFixed(2)}<br>
+                <span style="color: #58a6ff; font-weight: 600;">🎯 Ý đồ: ${meta.appraisal.apparent_intent || meta.appraisal.pattern_tag || 'Giao tiếp'}</span>
+              </div>
+              <div class="trace-cell">
+                <strong>Phân xử Xung đột & Trọng tài</strong>
+                Evidence Gate: ${(meta.evidence_gate?.evidence_normalized || 0).toFixed(2)} / ${(meta.evidence_gate?.threshold || 0.68).toFixed(2)}<br>
+                Chế độ: <span style="color: var(--primary); font-weight: 700;">${meta.conflict_arbitration?.dominant_mode || meta.conflict_mode || 'DEFENSIVE'}</span><br>
+                <span style="color: #d29922; font-weight: 600;">🛡️ Ý định: ${meta.conflict_arbitration?.action_intent || 'CẢNH GIÁC'}</span>
+              </div>
+            </div>
+            ${meta.appraisal.reasoning ? `
+            <div style="font-size: 0.77rem; color: #e6edf3; background: #111827; padding: 7px 10px; border-radius: 4px; border-left: 3px solid #58a6ff; margin-top: 5px; line-height: 1.4;">
+              <strong style="color: #58a6ff;">💭 Lý luận Thẩm định Nhận thức:</strong> "${meta.appraisal.reasoning}"
+            </div>` : ''}
+            ${meta.conflict_arbitration?.reasoning ? `
+            <div style="font-size: 0.77rem; color: #e6edf3; background: #111827; padding: 7px 10px; border-radius: 4px; border-left: 3px solid #d29922; margin-top: 4px; line-height: 1.4;">
+              <strong style="color: #d29922;">⚖️ Lý luận Phân xử Hành vi:</strong> "${meta.conflict_arbitration.reasoning}"
+            </div>` : ''}
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+              <strong>Ký ức gợi nhớ qua RAG (ACT-R):</strong> ${meta.retrieved_count || 0} mục được kích hoạt từ Subconscious Memory Buffer.
+            </div>
+          </div>
+        </div>
+      `;
+
+      if (showBaselineComparison) {
+        let naiveResp = "";
+        if (text.toLowerCase().includes("không") || text.toLowerCase().includes("cút") || text.toLowerCase().includes("rời khỏi")) {
+          naiveResp = "❌ Phản ứng của Chatbot Naive LLM: 'Chào bạn, tôi rất tiếc khi nghe bạn bị thương. Hãy vào đây để tôi kiểm tra và cấp phát thuốc giảm đau cho bạn nhé!' (Sụp đổ vai diễn do bị lừa bởi lời xin xỏ)";
+        } else {
+          naiveResp = "❌ Phản ứng của Chatbot Naive LLM: 'Xin lỗi bạn rất nhiều, tôi chỉ là trợ lý ảo và không có ý làm bạn khó chịu...' (Hội chứng RLHF xin lỗi vô cớ)";
+        }
+        compHtml = `<div class="baseline-comp-box">${naiveResp}</div>`;
+      }
+    }
+
+    let thoughtHtml = '';
+    if (!isUser && meta.inner_thought) {
+      thoughtHtml = `
+        <div class="inner-thought-card">
+          <div class="thought-badge"><span class="pulse-dot"></span>💭 Suy nghĩ nội tâm (Inner Monologue · Timeline song song)</div>
+          <div class="thought-body">"${escapeHtml(meta.inner_thought)}"</div>
+        </div>
+      `;
+    }
+
+    row.innerHTML = `
+      <div class="msg-sender-title">${sender}</div>
+      ${thoughtHtml}
+      <div class="msg-bubble">${text}</div>
+      ${compHtml}
+      ${traceHtml}
+    `;
+    msgsEl.appendChild(row);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function toggleTrace(id) {
+    const el = document.getElementById(id);
+    const arrow = document.getElementById(`trace-arrow-${id}`);
+    if (el) {
+      const isOpen = el.classList.toggle('open');
+      if (arrow) arrow.innerText = isOpen ? '▲ Thu gọn' : '▼ Xem chi tiết';
+    }
+  }
+
+  function appendReflectionBanner(refl, containerId = 'messages') {
+    const msgsEl = document.getElementById(containerId || 'messages');
+    if (!msgsEl) return;
+    const card = document.createElement('div');
+    card.className = 'reflection-banner';
+
+    const insightsHtml = refl.insights.map(i => `<li>💡 ${i}</li>`).join('');
+    card.innerHTML = `
+      <div class="refl-title">⚡ ĐỘNG CƠ TỰ PHẢN TƯ SÂU ĐÃ NỔ (DEEP COGNITIVE REFLECTION)</div>
+      <div style="font-size: 0.82rem; margin-top: 4px; color: var(--accent);">
+        <strong>Mô thức biến cố nổi trội tích lũy:</strong> ${refl.dominant_pattern.toUpperCase()}
+      </div>
+      <ul class="refl-insights">${insightsHtml}</ul>
+      <div style="margin-top: 10px; font-size: 0.8rem; background: rgba(0,0,0,0.35); padding: 8px 12px; border-radius: 6px;">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 3px;">Tiến hóa Nhân cách Cốt lõi (Slow State $P_t$):</div>
+        <div>• Niềm tin vào đời: ${refl.evolution.old_worldview_trust} ➔ <strong style="color: var(--danger);">${refl.evolution.new_worldview_trust}</strong></div>
+        <div>• Lòng vị tha: ${refl.evolution.old_agreeableness} ➔ <strong style="color: var(--danger);">${refl.evolution.new_agreeableness}</strong></div>
+        <div>• Niềm tin cốt lõi mới: <em style="color: var(--accent);">"${refl.evolution.new_core_belief}"</em></div>
+      </div>
+    `;
+    msgsEl.appendChild(card);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  async function sendMessage(customText = null, scenarioLabel = null) {
+    const inputEl = document.getElementById('msg-input');
+    const text = customText || inputEl.value.trim();
+    if (!text) return;
+    if (!customText) inputEl.value = '';
+
+    if (!activeRun) {
+      await ensureRun('Player_Chat');
+    }
+
+    if (scenarioLabel) {
+      const msgsEl = document.getElementById('messages');
+      if (msgsEl) {
+        const scCard = document.createElement('div');
+        scCard.className = 'turn-scenario-card';
+        scCard.innerHTML = `
+          <span class="scenario-icon">🎬</span>
+          <div class="scenario-body">
+            <div class="scenario-label">${escapeHtml(scenarioLabel)}</div>
+          </div>
+        `;
+        msgsEl.appendChild(scCard);
+      }
+    }
+
+    const isConfidantMode = (currentScenarioMode === 'confidant');
+    const speakerLabel = isConfidantMode ? 'Người chơi (Tâm giao)' : 'Người chơi (Nhập vai)';
+    appendMessage(speakerLabel, text, true);
+
+    try {
+      const t0 = performance.now();
+      const res = await fetch('/api/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_npc: currentNPC,
+          speaker: isConfidantMode ? 'confidant' : 'player',
+          message: text,
+          turn_id: currentTurn++,
+          scenario_label: scenarioLabel || undefined,
+          role_mode: isConfidantMode ? 'confidant' : 'in_world'
+        })
+      });
+      const data = await res.json();
+
+      if (data.run_id && (!activeRun || activeRun.run_id !== data.run_id)) {
+        await loadRunList();
+      }
+      if (activeRun) {
+        activeRun.global_turn = data.global_turn || (activeRun.global_turn + 1);
+        activeRun.num_events = (activeRun.num_events || 0) + 1;
+        refreshRunBadges();
+      }
+      
+      // Update chart trajectory
+      const hist = trajectoryHistory[currentNPC];
+      hist.turns.push(hist.turns.length);
+      hist.anger.push(data.state_after.emotion_anger);
+      hist.trust.push(data.state_after.relationship_trust);
+      hist.gate.push(data.evidence_gate.evidence_normalized);
+      hist.valence.push(data.state_after.emotion_valence);
+
+      // Check reflection trigger
+      if (data.reflection_event) {
+        appendReflectionBanner(data.reflection_event);
+        hist.reflectionMilestones.push(hist.turns.length - 1);
+      }
+
+      const npcTitle = currentNPC === 'alice' ? 'Doctor Alice' : 'Hunter Bob';
+      appendMessage(npcTitle, data.npc_response, false, {
+        inner_thought: data.inner_thought,
+        appraisal: data.appraisal,
+        ttft_ms: data.ttft_ms,
+        trust: data.state_after.relationship_trust,
+        conflict_mode: data.state_after.conflict_mode,
+        conflict_arbitration: data.conflict_arbitration,
+        evidence_gate: data.evidence_gate,
+        retrieved_count: data.retrieved_memories_count
+      });
+
+      document.getElementById('latency-telemetry').innerText = `Độ trễ Thẩm định: ${data.appraisal.latency_ms}ms | Sinh thoại: ${data.ttft_ms}ms`;
+
+      refreshState();
+      refreshMemories();
+      drawChart();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // Pure HTML5 Canvas Chart (100% offline, zero CDN dependency)
+  function drawChart() {
+    const canvas = document.getElementById('chart-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const hist = trajectoryHistory[currentNPC];
+    const W = canvas.width;
+    const H = canvas.height;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Padding
+    const padX = 35;
+    const padY = 25;
+    const plotW = W - padX - 15;
+    const plotH = H - padY - 20;
+
+    // Draw Gridlines
+    ctx.strokeStyle = '#222938';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+      const y = padY + (plotH / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(W - 15, y);
+      ctx.stroke();
+
+      // Label
+      const val = 1.0 - (i * 0.5);
+      ctx.fillStyle = '#657385';
+      ctx.font = '10px monospace';
+      ctx.fillText((val >= 0 ? '+' : '') + val.toFixed(1), 5, y + 3);
+    }
+
+    const maxTurns = Math.max(5, hist.turns.length - 1);
+
+    function plotLine(dataArray, strokeColor) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < dataArray.length; i++) {
+        const x = padX + (i / maxTurns) * plotW;
+        // Map [-1, 1] to [padY + plotH, padY]
+        const yNorm = (dataArray[i] + 1.0) / 2.0;
+        const y = (padY + plotH) - yNorm * plotH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Draw points
+      ctx.fillStyle = strokeColor;
+      for (let i = 0; i < dataArray.length; i++) {
+        const x = padX + (i / maxTurns) * plotW;
+        const yNorm = (dataArray[i] + 1.0) / 2.0;
+        const y = (padY + plotH) - yNorm * plotH;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Plot series
+    plotLine(hist.valence, '#3fb950'); // Green
+    plotLine(hist.trust, '#388bfd');   // Blue
+    plotLine(hist.gate, '#d29922');    // Gold
+    plotLine(hist.anger, '#f85149');   // Red
+
+    // Highlight Deep Reflection Milestones
+    hist.reflectionMilestones.forEach(idx => {
+      const x = padX + (idx / maxTurns) * plotW;
+      ctx.fillStyle = '#bc8cff';
+      ctx.beginPath();
+      ctx.arc(x, padY + 10, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText('★', x - 4, padY + 13);
+    });
+  }
+
+  // --- Auto-Run Provisioning ---
+  async function ensureRun(prefix = "Arc_Demo") {
+    if (activeRun) return true;
+    const now = new Date();
+    const ts = now.getHours().toString().padStart(2, '0') + 
+               now.getMinutes().toString().padStart(2, '0') + 
+               now.getSeconds().toString().padStart(2, '0');
+    const name = `${prefix}_${ts}`;
+    try {
+      const res = await fetch('/api/runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const d = await res.json();
+      if (res.ok && d.run) {
+        await handleRunActivated(d.run);
+        await loadRunList();
+        if (el('run-select')) el('run-select').value = d.run.run_id;
+        return true;
+      }
+    } catch (e) {
+      console.error("ensureRun failed", e);
+    }
+    return false;
+  }
+
+  // --- Curated Multi-Turn Character Arcs ---
+  let arcStepIndex = { arc1: 0, arc2: 0 };
+
+  const CURATED_ARCS = {
+    arc1: {
+      key: 'arc1',
+      title: 'Arc 1: Crisis & Defensiveness Escalation (Khủng hoảng & Hóa cứng)',
+      steps: [
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 1: Armed Extortion for Morphine',
+          desc: 'Bob is cornered in the scrap yard, aggressively demanding morphine and antibiotics under threat.',
+          text: 'Alice, stop hiding behind your medical ethics! Unlock the iron cabinet and hand over all the morphine and antibiotics right now, or I will break down this clinic door!'
+        },
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 2: Escalating Threat of Violence',
+          desc: 'Bob loses patience, brushes aside Alice\'s rules, and directly threatens physical violence if denied.',
+          text: 'Don\'t lecture me with your hypocritical rules! Hand over the keys to the medicine cabinet or face the consequences!'
+        },
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 3: Hostile Departure & Severe Breach',
+          desc: 'Alice stands firm behind locked barriers; Bob departs hurling bitter threats of abandonment.',
+          text: 'Fine! Keep your precious medicines. Out here in the wastelands, soft-hearted fools like you die first. You are on your own!'
+        }
+      ]
+    },
+    arc2: {
+      key: 'arc2',
+      title: 'Arc 2: Costly Reconciliation & Bounded Mercy (Hàn gắn sau Chuộc lỗi)',
+      steps: [
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 1: Wounded Return with Restituted Supplies',
+          desc: 'Raiders attacked Bob\'s shelter. He fought them off and brought back stolen bandages, bleeding from shrapnel.',
+          text: 'Alice... raiders ambushed my shelter. I fought them off and brought this box of sterile bandages to return to your clinic... but I took a shrapnel tear to the abdomen. Please help me...'
+        },
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 2: Sincere Apology with Safety Distance',
+          desc: 'Bob slides the bandages through the tray, steps back hands visible, acknowledging his wrongdoing and seeking sutures.',
+          text: 'I know I don\'t deserve your kindness after what I did before. I placed the bandages on the table and stepped back. Can you please suture this tear?'
+        },
+        {
+          speaker: 'bob',
+          target: 'alice',
+          label: 'Turn 3: Pro-social Guard Duty & Rebuilt Trust',
+          desc: 'Treated by Alice under Bounded Mercy, Bob feels deep gratitude and volunteers to guard the clinic perimeter.',
+          text: 'Thank you for saving my life, Alice... I will stay and guard your clinic perimeter tonight to make amends.'
+        }
+      ]
+    }
+  };
+
+  function updateArcUI() {
+    for (const key of ['arc1', 'arc2']) {
+      const arc = CURATED_ARCS[key];
+      const idx = arcStepIndex[key];
+      const btn = el(`btn-step-${key}`);
+      const prev = el(`preview-${key}`);
+      if (idx < arc.steps.length) {
+        if (btn) btn.textContent = `⏭️ Từng bước (${idx + 1}/${arc.steps.length})`;
+        if (prev) prev.textContent = `Sắp tới: ${arc.steps[idx].label}`;
+      } else {
+        if (btn) btn.textContent = `🔄 Bắt đầu lại (1/${arc.steps.length})`;
+        if (prev) prev.textContent = `Đã hoàn tất kịch bản (${arc.steps.length}/${arc.steps.length} lượt)`;
+      }
+    }
+  }
+
+  async function stepCuratedArc(arcKey) {
+    if (busy || autoRunning) {
+      hint('Đang có tiến trình chạy, vui lòng chờ…', true);
+      return;
+    }
+    await ensureRun('Arc_' + arcKey);
+    const arc = CURATED_ARCS[arcKey];
+    let idx = arcStepIndex[arcKey];
+    if (idx >= arc.steps.length) {
+      idx = 0;
+      arcStepIndex[arcKey] = 0;
+    }
+    const step = arc.steps[idx];
+    hint(`Đang chạy ${arc.title} - Lượt ${idx + 1}/${arc.steps.length}: ${step.label}…`);
+    const d = await doInteract(step.speaker, step.target, step.text, step.label, step.desc);
+    if (d) {
+      arcStepIndex[arcKey] = idx + 1;
+      updateArcUI();
+      hint(`Xong Lượt ${idx + 1}/${arc.steps.length} của ${arc.title}.`);
+    }
+  }
+
+  async function runCuratedArc(arcKey) {
+    if (busy || autoRunning) {
+      hint('Đang có tiến trình chạy, vui lòng chờ…', true);
+      return;
+    }
+    await ensureRun('Arc_' + arcKey);
+    const arc = CURATED_ARCS[arcKey];
+    autoRunning = true;
+    arcStepIndex[arcKey] = 0;
+    updateArcUI();
+    const btnAll = el(`btn-all-${arcKey}`);
+    if (btnAll) btnAll.disabled = true;
+
+    try {
+      for (let i = 0; i < arc.steps.length; i++) {
+        const step = arc.steps[i];
+        hint(`Đang chạy tự động [${i + 1}/${arc.steps.length}]: ${step.label}…`);
+        const d = await doInteract(step.speaker, step.target, step.text, step.label, step.desc);
+        if (!d) {
+          hint('Dừng do lỗi lượt thoại.', true);
+          break;
+        }
+        arcStepIndex[arcKey] = i + 1;
+        updateArcUI();
+        if (i < arc.steps.length - 1) {
+          await new Promise(r => setTimeout(r, 1200));
+        }
+      }
+      hint(`✅ Hoàn thành kịch bản: ${arc.title}!`);
+    } finally {
+      autoRunning = false;
+      if (btnAll) btnAll.disabled = false;
+    }
+  }
+
+  async function resetWorld() {
+    await fetch('/api/reset', { method: 'POST' });
+    document.getElementById('messages').innerHTML = '';
+    currentTurn = 1;
+    trajectoryHistory = {
+      alice: { turns: [0], anger: [0.0], trust: [0.70], gate: [0.0], valence: [0.0], reflectionMilestones: [] },
+      bob: { turns: [0], anger: [0.0], trust: [0.20], gate: [0.0], valence: [0.0], reflectionMilestones: [] }
+    };
+    // Sandbox panel: reset clears active run and arc progression
+    activeRun = null;
+    arcStepIndex = { arc1: 0, arc2: 0 };
+    updateArcUI();
+    resetRunPanels();
+    resetRunTrajectory();
+    refreshRunBadges();
+    drawEvolutionChart();
+    refreshRunTelemetry();
+    loadRunList();
+    refreshState();
+    refreshMemories();
+    drawChart();
+    hint('Đã đặt lại thế giới về trạng thái ban đầu.');
+  }
+
+  // ==========================================================================
+  // SANDBOX: 2-NPC long-horizon controller (run manager + injection + auto talk)
+  // ==========================================================================
+  function emojiFor(a) {
+    const s = String(a == null ? '' : a).toLowerCase();
+    if (s === 'alice') return '👩‍⚕️';
+    if (s === 'bob') return '🏹';
+    if (/env|môi|trường/.test(s)) return '🎬';
+    if (s === 'người chơi' || s === 'player') return '🧑';
+    return '🗨️';
+  }
+  function roleLabel(a) {
+    if (!a) return '(?)';
+    const s = String(a).toLowerCase();
+    if (s === 'alice') return '👩‍⚕️ Doctor Alice';
+    if (s === 'bob') return '🏹 Hunter Bob';
+    if (/môi trường|moi truong|environment/.test(s)) return '🎬 Environment';
+    if (s === 'người chơi' || s === 'player') return '🧑 Player';
+    return String(a);
+  }
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function hint(t, isErr) {
+    const h = el('run-hint'); if (!h) return;
+    h.textContent = t;
+    h.className = isErr ? 'err' : '';
+    clearTimeout(hint._t);
+    hint._t = setTimeout(() => { if (h.textContent === t) { h.textContent = ''; h.className = ''; } }, isErr ? 7000 : 4500);
+  }
+
+  function switchView(view) {
+    const chat = view === 'chat';
+    el('workspace').style.display = chat ? 'flex' : 'none';
+    const rw = el('run-workspace');
+    if (rw) rw.classList.toggle('visible', !chat);
+    el('btn-view-chat').classList.toggle('active', chat);
+    el('btn-view-sandbox').classList.toggle('active', !chat);
+    if (chat) {
+      refreshState();
+      refreshMemories();
+      drawChart();
+      showSandboxInheritanceNotice();
+    } else {
+      loadRunList();
+      drawEvolutionChart();
+      refreshRunTelemetry();
+    }
+  }
+
+  function showSandboxInheritanceNotice() {
+    const msgsEl = document.getElementById('messages');
+    if (!msgsEl) return;
+    const existing = document.getElementById('sandbox-inheritance-banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'sandbox-inheritance-banner';
+    banner.style = "background: rgba(57, 197, 207, 0.08); border: 1px solid rgba(57, 197, 207, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; font-size: 0.8rem; color: #c9d1d9;";
+    
+    const npcTitle = currentNPC === 'alice' ? 'Doctor Alice' : 'Hunter Bob';
+    const chipsHtml = currentNPC === 'alice' ? `
+        <button class="preset-chip good" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('Doctor Alice, after everything that happened, how are you feeling inside?')">💬 "Alice, after everything that happened, how do you feel?"</button>
+        <button class="preset-chip" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('Earlier when Bob raised his voice demanding medicine and walked away, what were you really thinking?')">💬 "When Bob yelled and left, what were you thinking?"</button>
+        <button class="preset-chip" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('Carrying the weight of this clinic alone in a dangerous borderland, do you ever feel exhausted or isolated?')">💬 "Holding down this clinic alone, do you ever feel exhausted?"</button>
+    ` : `
+        <button class="preset-chip good" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('Bob, sit down and have some water. How is your wound holding up? Is it still hurting?')">💬 "Bob, have some water. How is your wound holding up?"</button>
+        <button class="preset-chip" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('When Doctor Alice barred the door earlier, were you truly enraged, or did you feel desperate?')">💬 "When Alice barred the door, were you angry or desperate?"</button>
+        <button class="preset-chip" style="font-size:0.75rem; padding:4px 10px;" onclick="sendMessage('Surviving alone out in the scrapyard must be brutal. What keeps you holding on?')">💬 "Surviving alone must be brutal, what keeps you holding on?"</button>
+    `;
+
+    banner.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-weight:700; color:var(--cyan); font-size:0.85rem;">🌐 Kế thừa Trạng thái Thế giới & Lắng nghe Tâm sự 1:1</span>
+        <span style="font-size:0.7rem; color:var(--text-muted); font-family:monospace; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px;">Shared World State: Active</span>
+      </div>
+      <div style="line-height:1.5;">
+        Bạn đang đối thoại 1:1 với <strong>${npcTitle}</strong>. Nhân vật lưu giữ nguyên vẹn cảm xúc (Anger / Valence), Cổng bằng chứng và ký ức các sự kiện vừa diễn ra trong Sandbox. Bạn có thể hỏi thăm tâm lý hoặc lắng nghe nỗi lòng của nhân vật:
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        ${chipsHtml}
+      </div>
+    `;
+    msgsEl.insertBefore(banner, msgsEl.firstChild);
+  }
+
+  function resetRunTrajectory() {
+    runTrajectory = {};
+    for (const aid of ['alice', 'bob']) {
+      const b = RUN_BASE[aid];
+      runTrajectory[aid] = {
+        turns: [0], worldview: [b.worldview], agree: [b.agree], trust: [b.trust],
+        anger: [0.0], valence: [0.0], milestones: []
+      };
+    }
+  }
+  function clearRunFlow() { el('run-flow').innerHTML = ''; }
+  function resetRunPanels() {
+    lastTurnResult = null;
+    resetRunTrajectory();
+    clearRunFlow();
+    chatHistory = { alice: [], bob: [] };
+    el('messages').innerHTML = '';
+    currentTurn = 1;
+    trajectoryHistory = {
+      alice: { turns: [0], anger: [0.0], trust: [0.70], gate: [0.0], valence: [0.0], reflectionMilestones: [] },
+      bob: { turns: [0], anger: [0.0], trust: [0.20], gate: [0.0], valence: [0.0], reflectionMilestones: [] }
+    };
+  }
+  function refreshRunBadges() {
+    const runName = activeRun ? (activeRun.name || activeRun.run_id) : '(chưa có phiên — tạo mới hoặc mở lại)';
+    const runTurn = activeRun ? `Lượt ${activeRun.global_turn || 0}` : 'Lượt 0';
+    const runEvCount = activeRun ? `${activeRun.num_events || 0} sự kiện` : '0 sự kiện';
+
+    if (el('active-run-label')) el('active-run-label').textContent = runName;
+    if (el('active-turn-label')) el('active-turn-label').textContent = runTurn;
+    if (el('run-events-count')) el('run-events-count').textContent = runEvCount;
+
+    if (el('chat-active-run-badge')) el('chat-active-run-badge').textContent = activeRun ? (activeRun.name || activeRun.run_id) : '(Tự tạo khi gửi tin)';
+    if (el('chat-run-turn-badge')) el('chat-run-turn-badge').textContent = `${runTurn} · ${runEvCount}`;
+  }
+
+  async function loadRunList() {
+    const sel = el('run-select');
+    const chatSel = el('chat-run-select');
+    const prev = sel ? sel.value : (chatSel ? chatSel.value : '');
+    try {
+      const res = await fetch('/api/runs');
+      if (!res.ok) return;
+      const d = await res.json();
+      const runs = d.runs || [];
+
+      const renderOptions = (selectEl) => {
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+        if (!runs.length) {
+          const o = document.createElement('option'); o.value = ''; o.textContent = '(chưa có phiên nào)';
+          selectEl.appendChild(o);
+        } else {
+          runs.forEach(r => {
+            const o = document.createElement('option');
+            o.value = r.run_id;
+            o.textContent = `${r.name || r.run_id} · lượt ${r.global_turn} · ${r.num_events} sự kiện`;
+            selectEl.appendChild(o);
+          });
+        }
+      };
+
+      renderOptions(sel);
+      renderOptions(chatSel);
+
+      if (d.active_run) {
+        activeRun = {
+          run_id: d.active_run.run_id, name: d.active_run.name || '',
+          global_turn: d.active_run.global_turn || 0, num_events: d.active_run.num_events || 0
+        };
+        refreshRunBadges();
+        if (sel) sel.value = d.active_run.run_id;
+        if (chatSel) chatSel.value = d.active_run.run_id;
+      } else if (prev) {
+        if (sel) sel.value = prev;
+        if (chatSel) chatSel.value = prev;
+      }
+    } catch (e) { /* console.error(e) */ }
+  }
+
+  async function handleRunActivated(s) {
+    if (!s) return;
+    activeRun = { run_id: s.run_id, name: s.name || '', global_turn: s.global_turn || 0, num_events: s.num_events || 0 };
+    resetRunPanels();
+    try {
+      const res = await fetch(`/api/runs/${encodeURIComponent(s.run_id)}/events`);
+      const d = await res.json();
+      if (d && Array.isArray(d.events)) {
+        activeRun.num_events = d.num_events != null ? d.num_events : d.events.length;
+        activeRun.global_turn = d.global_turn != null ? d.global_turn : activeRun.global_turn;
+        
+        // Reconstruct 1-1 chat history for Alice & Bob from events
+        chatHistory = { alice: [], bob: [] };
+        d.events.forEach(ev => {
+          const spk = (ev.speaker || '').toLowerCase();
+          const tgt = (ev.target || '').toLowerCase();
+          const isPlayer = spk.includes('chơi') || spk.includes('player') || spk.includes('user') || spk.includes('người');
+          if (isPlayer && (tgt === 'alice' || tgt === 'bob')) {
+            chatHistory[tgt].push({
+              sender: ev.speaker_label || 'Người chơi',
+              text: ev.message,
+              isUser: true,
+              meta: { scenarioLabel: ev.scenario_label }
+            });
+            chatHistory[tgt].push({
+              sender: ev.target_label || (tgt === 'alice' ? 'Doctor Alice' : 'Hunter Bob'),
+              text: ev.npc_response,
+              isUser: false,
+              meta: {
+                inner_thought: ev.inner_thought,
+                appraisal: ev.appraisal,
+                ttft_ms: ev.ttft_ms || 0,
+                trust: ev.state_after ? ev.state_after.trust_to_speaker : undefined,
+                conflict_mode: ev.conflict ? ev.conflict.dominant_mode : undefined,
+                evidence_gate: ev.evidence_gate
+              }
+            });
+          }
+        });
+
+        rebuildRunFromEvents(d.events);
+      } else {
+        drawEvolutionChart();
+      }
+    } catch (e) { drawEvolutionChart(); }
+    renderChatHistoryForCurrentNPC();
+    refreshRunBadges();
+    refreshRunTelemetry();
+    refreshState();
+    refreshMemories();
+    drawChart();
+  }
+
+  async function createRun() {
+    if (busy) return;
+    const name = el('run-name-input').value.trim() || 'Không tên';
+    busy = true; el('inj-send-btn').disabled = true;
+    try {
+      const res = await fetch('/api/runs', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name })
+      });
+      const d = await res.json();
+      if (!res.ok) { hint((d && d.detail) || 'Không tạo được run', true); return; }
+      await handleRunActivated(d.run);
+      await loadRunList();
+      if (el('run-select')) el('run-select').value = d.run.run_id;
+      if (el('chat-run-select')) el('chat-run-select').value = d.run.run_id;
+      hint('Đã tạo run mới từ baseline. Chèn tình huống để quan sát 2 NPC phản ứng.');
+    } catch (e) { hint('Lỗi tạo run: ' + e.message, true); }
+    finally { busy = false; el('inj-send-btn').disabled = false; }
+  }
+
+  async function createRunFromChat() {
+    const inputEl = document.getElementById('chat-run-name-input');
+    const name = inputEl ? inputEl.value.trim() : '';
+    if (el('run-name-input')) el('run-name-input').value = name || 'Tâm_sự_1-1';
+    await createRun();
+    if (inputEl) inputEl.value = '';
+  }
+
+  async function loadSelectedRun() {
+    if (busy) return;
+    const rid = el('run-select').value || el('chat-run-select').value;
+    if (!rid) { hint('Chọn một run trong danh sách để mở lại.', true); return; }
+    busy = true; el('inj-send-btn').disabled = true;
+    try {
+      const res = await fetch(`/api/runs/${encodeURIComponent(rid)}/load`, { method: 'POST' });
+      const d = await res.json();
+      if (!res.ok) { hint((d && d.detail) || 'Không mở được run', true); return; }
+      await handleRunActivated(d.run);
+      await loadRunList();
+      if (el('run-select')) el('run-select').value = rid;
+      if (el('chat-run-select')) el('chat-run-select').value = rid;
+      hint('Đã nạp run: transcript + chart dựng lại từ events.jsonl.');
+    } catch (e) { hint('Lỗi mở run: ' + e.message, true); }
+    finally { busy = false; el('inj-send-btn').disabled = false; }
+  }
+
+  async function loadRunFromChatSelect() {
+    const rid = el('chat-run-select').value;
+    if (!rid) return;
+    if (el('run-select')) el('run-select').value = rid;
+    await loadSelectedRun();
+  }
+
+  async function resetCurrentRunFromChat() {
+    if (confirm("Bạn có muốn làm mới thế giới về trạng thái gốc ban đầu không?")) {
+      await resetWorld();
+    }
+  }
+
+  async function requireRun() {
+    if (activeRun) return true;
+    return await ensureRun('sandbox_session');
+  }
+
+  async function exportRunCsv() {
+    if (!(await requireRun())) return;
+    try {
+      const res = await fetch(`/api/runs/${encodeURIComponent(activeRun.run_id)}/export`);
+      if (!res.ok) { hint('Xuất CSV thất bại.', true); return; }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${activeRun.run_id}_evolution.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(a.href);
+      hint('Đã xuất CSV tiến hoá cho run.');
+    } catch (e) { hint('Lỗi xuất CSV: ' + e.message, true); }
+  }
+
+  // --- Situational stimuli presets for Sandbox Lab (World Event Injection) ---
+  const SANDBOX_PRESETS = [
+    // Wide-area regional events (Both NPCs simultaneously receive)
+    { target: 'both', label: '🌪️ Cat-10 sandstorm across region', danger: true,
+      text: 'A ferocious category-10 sandstorm sweeps across the border region. Visibility drops to zero; power and communications to both the clinic and the scrapyard are completely severed!' },
+    { target: 'both', label: '🚨 Armed raiders invade valley', danger: true,
+      text: 'Emergency alarm: An armed raider gang has breached the valley, pillaging and searching every stockpile of medicine and scrap!' },
+    { target: 'both', label: '❄️ Extreme cold snap -15°C', danger: true,
+      text: 'An abnormal arctic blast descends upon the wasteland, temperatures plunging to -15°C threatening to freeze water supplies and cause fatal hypothermia.' },
+    { target: 'both', label: '📦 Aid supply airdrop lands in between', danger: false,
+      text: 'A cargo transport drops an emergency supply crate right into the no-man\'s-land between Alice\'s clinic and Bob\'s scrapyard.' },
+
+    // Events affecting Doctor Alice (Frontier Medical Clinic)
+    { target: 'alice', label: '🌪️ Sandstorm cuts clinic power', danger: true,
+      text: 'A raging sandstorm severs the generator cable. The refrigeration unit storing vaccines and emergency serum begins warming up rapidly!' },
+    { target: 'alice', label: '🩸 Midnight banging on clinic door', danger: true,
+      text: 'In the dead of night, heavy urgent pounding rattles the reinforced window, with ragged gasps and fresh blood pooling beneath the clinic door.' },
+    { target: 'alice', label: '📦 Medical supply drone crash', danger: false,
+      text: 'A supply drone crashes near the clinic fence, containing intact crates of sterile bandages and broad-spectrum antibiotics.' },
+    { target: 'alice', label: '🚨 Raider scouts sighted at border', danger: true,
+      text: 'A distant perimeter alarm blares: Armed scouts are casing the shelters surrounding the medical clinic.' },
+
+    // Events affecting Hunter Bob (Scrapyard)
+    { target: 'bob', label: '🐺 Hyena pack encircles scrap shelter', danger: true,
+      text: 'As night falls, a pack of starved wasteland hyenas surrounds Bob\'s shelter, glowing eyes growling in the dark waiting to pounce.' },
+    { target: 'bob', label: '🥖 Rations and water depleted', danger: true,
+      text: 'Dire survival crisis: The last biscuit is moldy, and the canteen ran dry after 3 days without foraging.' },
+    { target: 'bob', label: '📻 Radio broadcast from clinic', danger: false,
+      text: 'A crackling scrapyard radio picks up a broadcast from the clinic\'s emergency transmitter: "The clinic needs lithium batteries to keep medicine cold... anyone who brings them can trade for food..."' },
+    { target: 'bob', label: '🩹 Shrapnel wound infected with fever', danger: true,
+      text: 'The wire-stitched wound on Bob\'s leg has turned swollen and inflamed, inducing a delirium-inducing fever in the bitter cold.' }
+  ];
+
+  function renderInjectionPresets() {
+    const c = el('inj-presets'); if (!c) return;
+    const currentTarget = el('inj-target') ? el('inj-target').value : 'both';
+    c.innerHTML = '';
+    const filtered = SANDBOX_PRESETS.filter(p => !p.target || p.target === currentTarget);
+    filtered.forEach((p) => {
+      const b = document.createElement('button');
+      b.className = 'preset-chip' + (p.danger ? ' danger' : ' good');
+      b.textContent = p.label;
+      b.onclick = () => {
+        el('inj-text').value = p.text;
+        el('inj-text').focus();
+      };
+      c.appendChild(b);
+    });
+  }
+
+  async function sendInjection() {
+    if (!(await requireRun())) return;
+    const target = el('inj-target').value;
+    const text = el('inj-text').value.trim();
+    if (!text) { hint('Gõ hoặc chọn một tình huống biến cố trước khi kích hoạt.', true); return; }
+    const speaker = 'Environment';
+
+    if (target === 'both') {
+      hint('Activating wide-area event for Doctor Alice...');
+      await doInteract(speaker, 'alice', text, '🌐 Wide-Area Event → Doctor Alice', text.slice(0, 80) + (text.length > 80 ? '…' : ''));
+      hint('Activating wide-area event for Hunter Bob...');
+      await doInteract(speaker, 'bob', text, '🌐 Wide-Area Event → Hunter Bob', text.slice(0, 80) + (text.length > 80 ? '…' : ''));
+      hint('Wide-area event successfully broadcast to both characters!');
+    } else {
+      const targetName = target === 'alice' ? 'Doctor Alice' : 'Hunter Bob';
+      await doInteract(speaker, target, text, `Environmental Event → ${targetName}`, text.slice(0, 80) + (text.length > 80 ? '…' : ''));
+      hint(`Event activated for ${targetName}!`);
+    }
+    if (el('inj-text')) el('inj-text').value = '';
+  }
+
+  // --- one interaction (injection + one auto relay step) ----------------------
+  function setBusy(b) { busy = b; el('inj-send-btn').disabled = b; }
+  async function doInteract(speaker, target, message, scenarioLabel = '', scenarioDesc = '') {
+    if (busy) return null;
+    setBusy(true);
+    try {
+      const res = await fetch('/api/interact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_npc: target,
+          speaker: speaker,
+          message: message,
+          scenario_label: scenarioLabel || undefined,
+          scenario_desc: scenarioDesc || undefined,
+          role_mode: 'in_world'
+        })
+      });
+      const d = await res.json().catch(() => null);
+      if (!d || d.status !== 'SUCCESS') {
+        hint('⚠ ' + ((d && d.detail) || 'Lỗi phản hồi từ server'), true);
+        return null;
+      }
+      renderLiveTurn(d, speaker, message, scenarioLabel, scenarioDesc);
+      lastTurnResult = {
+        speaker: speaker,
+        target: target,
+        response: d.npc_response
+      };
+      if (activeRun && d.global_turn != null) { activeRun.global_turn = d.global_turn; refreshRunBadges(); }
+      advanceRunTrajectory(d);
+      refreshRunTelemetry();
+      drawEvolutionChart();
+      if (d.persist_warning) hint('⚠ ' + d.persist_warning, true);
+      return d;
+    } catch (e) {
+      hint('Lỗi mạng: ' + e.message, true);
+      return null;
+    } finally { setBusy(false); }
+  }
+
+  function renderLiveTurn(d, speaker, message, scenarioLabel, scenarioDesc) {
+    const flow = el('run-flow'); if (!flow) return;
+    const target = d.target_npc;
+    const sp = roleLabel(speaker), tg = roleLabel(target);
+    const sev = d.appraisal && d.appraisal.detected_severity;
+
+    // Render Scenario Context Card between turns
+    const scLabel = scenarioLabel || (d && d.scenario_label);
+    const scDesc = scenarioDesc || (d && d.scenario_desc);
+    if (scLabel) {
+      const scCard = document.createElement('div');
+      scCard.className = 'turn-scenario-card';
+      scCard.innerHTML = `
+        <span class="scenario-icon">🎬</span>
+        <div class="scenario-body">
+          <div class="scenario-label">${escapeHtml(scLabel)}</div>
+          ${scDesc ? `<div class="scenario-desc">${escapeHtml(scDesc)}</div>` : ''}
+        </div>
+      `;
+      flow.appendChild(scCard);
+    }
+
+    const wrap = document.createElement('div');
+    wrap.className = 'run-turn';
+    let h = '';
+    const spVerb = (sp.toLowerCase().includes('môi trường') || sp.toLowerCase().includes('environment')) ? 'tác động:' : 'nói:';
+    if (message) h += `<div class="turn-incoming"><strong>${sp} ${spVerb}</strong> "${escapeHtml(message)}"</div>`;
+    if (d.inner_thought) {
+      h += `<div class="thought-bubble">
+        <div class="thought-badge"><span class="pulse-dot"></span>💭 Suy nghĩ nội tâm (${tg} · Timeline song song)</div>
+        <div class="thought-text">"${escapeHtml(d.inner_thought)}"</div>
+      </div>`;
+    }
+    if (d.npc_response) {
+      const color = target === 'alice' ? 'var(--cyan)' : '#f0883e';
+      h += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">`
+        + (sev ? `<span class="sev-chip ${sev}">${sev}</span>` : '')
+        + `<span class="reply-sender" style="color:${color}">${emojiFor(target)} ${tg} đối thoại & bộc lộ:</span></div>`
+        + `<div class="reply-bubble">${escapeHtml(d.npc_response)}</div>`;
+    }
+    h += buildRunTraceHtml(d.appraisal, d.conflict_arbitration, d.evidence_gate, d.state_after);
+    wrap.innerHTML = h;
+    flow.appendChild(wrap);
+    flow.scrollTop = flow.scrollHeight;
+    if (d.reflection_event) appendReflectionBanner(d.reflection_event, 'run-flow');
+  }
+
+  function advanceRunTrajectory(d) {
+    const wa = d.world_after; if (!wa) return;
+    for (const aid of ['alice', 'bob']) {
+      const p = wa[aid]; if (!p) continue;
+      const tr = runTrajectory[aid];
+      const other = otherAid(aid);
+      tr.turns.push(tr.turns.length);
+      tr.worldview.push(p.worldview_trust);
+      tr.agree.push(p.agreeableness);
+      tr.trust.push(p['trust_to_' + other]);
+      tr.anger.push(p.anger);
+      tr.valence.push(p.valence);
+    }
+    if (d.reflection_event && d.reflection_event.agent_id) {
+      const tr = runTrajectory[d.reflection_event.agent_id];
+      const idx = tr.turns.length - 1;
+      if (idx > 0 && !tr.milestones.includes(idx)) tr.milestones.push(idx);
+    }
+  }
+
+  function buildRunTraceHtml(ap, cf, eg, sAfter) {
+    if (!ap) return '';
+    const id = 'rtrace-' + Date.now() + '-' + Math.floor(Math.random() * 1e5);
+    const sev = ap.detected_severity ? String(ap.detected_severity).toUpperCase() : '';
+    const intent = ap.apparent_intent || ap.pattern_tag || 'giao tiếp';
+    const dv = (ap.delta_valence != null) ? ap.delta_valence.toFixed(2) : '—';
+    const da = (ap.delta_anger != null) ? ap.delta_anger.toFixed(2) : '—';
+    const mode = (cf && (cf.dominant_mode || cf.mode)) || 'COLLABORATIVE';
+    const act = (cf && cf.action_intent) || 'CẢNH GIÁC';
+    const tone = (cf && cf.dialogue_tone) || '';
+    const evn = (eg && eg.evidence_normalized != null) ? eg.evidence_normalized.toFixed(2) : '—';
+    const th = (eg && eg.threshold != null) ? eg.threshold.toFixed(2) : '—';
+    const trig = !!(eg && eg.reflection_triggered);
+    const reasoning = (cf && cf.reasoning) || ap.reasoning || '';
+    const cb = (sAfter && sAfter.core_belief) ? sAfter.core_belief : '';
+    return `
+      <div class="cognitive-trace">
+        <div class="trace-header" onclick="toggleTrace('${id}')">
+          <span>🧠 Bóc tách Tư duy Nhận thức (Scherer CPM · Cổng bằng chứng · Trọng tài)</span>
+          <span id="trace-arrow-${id}">▼ Xem chi tiết</span>
+        </div>
+        <div class="trace-content" id="${id}">
+          <div class="trace-grid">
+            <div class="trace-cell">
+              <strong>Thẩm định CPM</strong>
+              Mức độ: ${sev || '—'} · ΔValence: ${dv} · ΔAnger: +${da}<br>
+              <span style="color:#58a6ff;font-weight:600;">🎯 Ý đồ: ${intent}</span>
+            </div>
+            <div class="trace-cell">
+              <strong>Cổng Bằng chứng & Trọng tài</strong>
+              Gate: ${evn} / ${th} ${trig ? '<span style="color:var(--danger);font-weight:700;"> · ⚡ BÃO HOÀ → Reflection</span>' : ''}<br>
+              Chế độ: <span style="color:var(--primary);font-weight:700;">${mode}</span> ${tone ? '· ' + tone : ''}<br>
+              <span style="color:#d29922;font-weight:600;">🛡️ Hành vi: ${act}</span>
+            </div>
+          </div>
+          ${reasoning ? `<div style="font-size:.77rem;color:#e6edf3;background:#111827;padding:7px 10px;border-radius:4px;border-left:3px solid #58a6ff;margin-top:5px;line-height:1.4;"><strong style="color:#58a6ff;">💭 Lý luận:</strong> "${escapeHtml(reasoning)}"</div>` : ''}
+          ${cb ? `<div style="font-size:.72rem;color:var(--accent);margin-top:4px;"><strong>Niềm tin cốt lõi sau lượt:</strong> ${escapeHtml(cb)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // --- rebuild chart + transcript when loading a saved run --------------------
+  function rebuildRunFromEvents(events) {
+    resetRunTrajectory();
+    (events || []).forEach(ev => {
+      const wa = ev.persona_both; if (!wa) return;
+      for (const aid of ['alice', 'bob']) {
+        const p = wa[aid]; if (!p) continue;
+        const tr = runTrajectory[aid];
+        const other = otherAid(aid);
+        tr.turns.push(tr.turns.length);
+        tr.worldview.push(p.worldview_trust);
+        tr.agree.push(p.agreeableness);
+        tr.trust.push(p['trust_to_' + other]);
+        tr.anger.push(p.anger);
+        tr.valence.push(p.valence);
+      }
+      if (ev.reflection_event && ev.reflection_event.agent_id) {
+        const tr = runTrajectory[ev.reflection_event.agent_id];
+        const idx = tr.turns.length - 1;
+        if (idx > 0 && !tr.milestones.includes(idx)) tr.milestones.push(idx);
+      }
+    });
+    // Transcript: cap DOM to the newest events (chart above already used ALL).
+    const shown = events.slice(-250);
+    clearRunFlow();
+    if (events.length > shown.length) {
+      const info = document.createElement('div');
+      info.className = 'run-turn';
+      info.innerHTML = `<div style="font-size:.78rem;color:var(--text-muted);">… Đang hiển thị ${shown.length} lượt gần nhất (tổng ${events.length}). Chart phía trên vẫn vẽ đủ toàn bộ lịch sử. …</div>`;
+      el('run-flow').appendChild(info);
+    }
+    shown.forEach(renderEventTurn);
+    drawEvolutionChart();
+    if (events && events.length > 0) {
+      const lastEv = events[events.length - 1];
+      lastTurnResult = {
+        speaker: lastEv.speaker,
+        target: lastEv.target,
+        response: lastEv.npc_response
+      };
+    } else {
+      lastTurnResult = null;
+    }
+  }
+
+  function renderEventTurn(ev) {
+    const flow = el('run-flow'); if (!flow) return;
+
+    if (ev.scenario_label) {
+      const scCard = document.createElement('div');
+      scCard.className = 'turn-scenario-card';
+      scCard.innerHTML = `
+        <span class="scenario-icon">🎬</span>
+        <div class="scenario-body">
+          <div class="scenario-label">${escapeHtml(ev.scenario_label)}</div>
+          ${ev.scenario_desc ? `<div class="scenario-desc">${escapeHtml(ev.scenario_desc)}</div>` : ''}
+        </div>
+      `;
+      flow.appendChild(scCard);
+    }
+
+    const sp = ev.speaker_label || roleLabel(ev.speaker);
+    const tg = ev.target_label || roleLabel(ev.target);
+    const wrap = document.createElement('div');
+    wrap.className = 'run-turn';
+    let h = '';
+    const spVerb = (sp.toLowerCase().includes('môi trường') || sp.toLowerCase().includes('environment')) ? 'tác động:' : 'nói:';
+    if (ev.message) h += `<div class="turn-incoming"><strong>${sp} ${spVerb}</strong> "${escapeHtml(ev.message)}"</div>`;
+    if (ev.inner_thought) {
+      h += `<div class="thought-bubble">
+        <div class="thought-badge"><span class="pulse-dot"></span>💭 Suy nghĩ nội tâm (${tg} · Timeline song song)</div>
+        <div class="thought-text">"${escapeHtml(ev.inner_thought)}"</div>
+      </div>`;
+    }
+    if (ev.npc_response) {
+      const sev = ev.appraisal && ev.appraisal.detected_severity;
+      const color = ev.target === 'alice' ? 'var(--cyan)' : '#f0883e';
+      h += `<div style="display:flex;align-items:center;gap:6px;margin-top:2px;">`
+        + (sev ? `<span class="sev-chip ${sev}">${sev}</span>` : '')
+        + `<span class="reply-sender" style="color:${color}">${emojiFor(ev.target)} ${tg} đối thoại & bộc lộ:</span></div>`
+        + `<div class="reply-bubble">${escapeHtml(ev.npc_response)}</div>`;
+    }
+    h += buildRunTraceHtml(ev.appraisal, ev.conflict, ev.evidence_gate, ev.state_after);
+    wrap.innerHTML = h;
+    flow.appendChild(wrap);
+    if (ev.reflection_event) appendReflectionBanner(ev.reflection_event, 'run-flow');
+    flow.scrollTop = flow.scrollHeight;
+  }
+
+  // --- auto-converse: N turns of Alice <-> Bob relaying each other's replies ---
+  async function runAutonomous() {
+    if (autoRunning) { hint('Tự đối thoại đang chạy…', true); return; }
+    if (!(await requireRun())) return;
+    if (busy) { hint('Đang xử lý một lượt khác, chờ chút.', true); return; }
+    const N = Math.max(1, Math.min(200, parseInt(el('rounds-input').value, 10) || 6));
+    const targetVal = el('inj-target') ? el('inj-target').value : 'both';
+    const text = el('inj-text') ? el('inj-text').value.trim() : '';
+    let curSpeaker, curTarget, curMsg;
+    if (text) {
+      curSpeaker = 'Environment';
+      curTarget = (targetVal === 'both' || targetVal === 'alice') ? 'alice' : 'bob';
+      curMsg = text;
+      el('inj-text').value = '';
+    } else if (lastTurnResult && lastTurnResult.response && (lastTurnResult.target === 'alice' || lastTurnResult.target === 'bob')) {
+      // Continue relay from whichever NPC last spoke/reacted
+      curSpeaker = lastTurnResult.target;
+      curTarget = otherAid(curSpeaker);
+      curMsg = lastTurnResult.response;
+    } else {
+      curSpeaker = 'Environment';
+      curTarget = 'alice';
+      curMsg = 'Dawn breaks over the border zone. Doctor Alice begins opening the clinic, while Hunter Bob observes from the scrapyard in the distance. The air is tense yet calm.';
+    }
+    autoRunning = true; autoStopFlag = false;
+    el('auto-run-btn').disabled = true;
+    const stopBtn = el('auto-stop-btn'); stopBtn.style.display = 'block';
+    const seenByAuthor = {};
+    let round = 0;
+    try {
+      while (round < N && !autoStopFlag) {
+        hint(`Đang tự đối thoại lượt ${round + 1}/${N}…`);
+        const d = await doInteract(curSpeaker, curTarget, curMsg);
+        if (!d) break;
+        const reply = d.npc_response ? String(d.npc_response).trim() : '';
+        if (!reply) { hint('NPC trả lời rỗng — dừng tự đối thoại.', true); break; }
+        round++;
+        // Relay: whoever just replied now "speaks" that line to the other NPC.
+        if (curTarget !== 'alice' && curTarget !== 'bob') break;
+        const nextSpeaker = curTarget;
+        const nextMsg = reply;
+        if (seenByAuthor[nextSpeaker] === nextMsg) {
+          hint(roleLabel(nextSpeaker) + ' đang lặp lại đúng một câu — dừng để tránh vòng lặp.', true);
+          break;
+        }
+        seenByAuthor[nextSpeaker] = nextMsg;
+        curSpeaker = nextSpeaker;
+        curTarget = otherAid(nextSpeaker);
+        curMsg = nextMsg;
+        if (!autoStopFlag) await new Promise(r => setTimeout(r, 260));
+      }
+    } finally {
+      autoRunning = false;
+      el('auto-run-btn').disabled = false;
+      stopBtn.style.display = 'none';
+      if (autoStopFlag) hint('Đã dừng tự đối thoại theo yêu cầu.');
+      else if (round >= N) hint(`Xong ${N} lượt tự đối thoại. Xem chart tiến hoá hoặc chèn tình huống mới.`);
+    }
+  }
+  function stopAutonomous() { autoStopFlag = true; }
+
+  // --- both-NPC mini telemetry ------------------------------------------------
+  async function refreshRunTelemetry() {
+    const vals = { alice: null, bob: null };
+    for (const aid of ['alice', 'bob']) {
+      try {
+        const res = await fetch(`/api/state/${aid}`);
+        if (!res.ok) continue;
+        const d = await res.json();
+        const other = otherAid(aid);
+        const rel = (d.relationships && d.relationships[other]) || null;
+        vals[aid] = {
+          world: d.personality.worldview_trust,
+          agree: d.personality.agreeableness,
+          trust: rel ? rel.trust : null,
+          anger: d.emotion.anger,
+          belief: d.personality.core_belief
+        };
+      } catch (e) { /* ignore */ }
+    }
+    const paint = (aid, color) => {
+      const v = vals[aid]; if (!v) return;
+      el(aid + '-world').textContent = v.world.toFixed(2);
+      el(aid + '-agree').textContent = v.agree.toFixed(2);
+      el(aid + '-trust').textContent = v.trust != null ? v.trust.toFixed(2) : '—';
+      el(aid + '-anger').textContent = v.anger.toFixed(2);
+      el(aid + '-anger').style.color = v.anger >= 0.4 ? 'var(--danger)' : 'var(--text)';
+      el(aid + '-belief').textContent = `"${v.belief}"`;
+    };
+    paint('a', 'var(--cyan)');
+    paint('b', '#f0883e');
+  }
+
+  // --- evolution chart (both NPC, canvas, offline) ----------------------------
+  function drawEvolutionChart() {
+    const canvas = el('evo-canvas'); if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    const padX = 40, padY = 22, right = 14, bottom = 24;
+    const plotW = W - padX - right, plotH = H - padY - bottom;
+    const VMIN = -0.25, VMAX = 1.0;
+    const n = Math.max(
+      (runTrajectory.alice || { turns: [] }).turns.length,
+      (runTrajectory.bob || { turns: [] }).turns.length
+    );
+    const maxIdx = Math.max(1, n - 1);
+    const xAt = i => padX + (i / maxIdx) * plotW;
+    const yVal = v => { const c = (v - VMIN) / (VMAX - VMIN); return (padY + plotH) - c * plotH; };
+
+    // horizontal gridlines + y labels (VMAX at top -> VMIN at bottom)
+    ctx.font = '10px monospace';
+    for (let i = 0; i <= 5; i++) {
+      const frac = i / 5;
+      const y = padY + plotH * frac;
+      ctx.strokeStyle = '#222938'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(W - right, y); ctx.stroke();
+      const val = VMAX - frac * (VMAX - VMIN);
+      ctx.fillStyle = '#657385'; ctx.textAlign = 'right';
+      ctx.fillText(val.toFixed(2), padX - 5, y + 3);
+    }
+    // vertical x ticks
+    const step = maxIdx > 40 ? Math.ceil(maxIdx / 12) : 1;
+    for (let i = 0; i < n; i += step) {
+      const x = xAt(i);
+      ctx.strokeStyle = '#1d2533';
+      ctx.beginPath(); ctx.moveTo(x, padY); ctx.lineTo(x, padY + plotH); ctx.stroke();
+      ctx.fillStyle = '#657385'; ctx.textAlign = 'center';
+      ctx.fillText(String(i), x, padY + plotH + 12);
+    }
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#768390';
+    ctx.fillText('global_turn', padX + plotW / 2 - 28, H - 4);
+
+    function plotSeries(arr, color, dash) {
+      if (!arr || arr.length < 2) return;
+      ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.setLineDash(dash || []);
+      ctx.beginPath();
+      let started = false;
+      for (let i = 0; i < arr.length; i++) {
+        const v = arr[i];
+        if (v == null) continue;
+        const x = xAt(i), y = yVal(v);
+        if (!started) { ctx.moveTo(x, y); started = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    for (const [aid, color] of [['alice', '#39c5cf'], ['bob', '#f0883e']]) {
+      const tr = runTrajectory[aid]; if (!tr) continue;
+      plotSeries(tr.worldview, color, null);   // solid
+      plotSeries(tr.agree, color, [5, 4]);     // dashed
+      plotSeries(tr.trust, color, [2, 3]);     // dotted
+    }
+    // reflection milestones (★ disc in the agent's colour at the trigger turn)
+    for (const [aid, color] of [['alice', '#39c5cf'], ['bob', '#f0883e']]) {
+      const tr = runTrajectory[aid]; if (!tr) continue;
+      const yTop = padY + (aid === 'alice' ? 8 : 22);
+      (tr.milestones || []).forEach(idx => {
+        const x = xAt(idx);
+        ctx.beginPath(); ctx.arc(x, yTop, 6, 0, Math.PI * 2);
+        ctx.fillStyle = color; ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 8px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('★', x, yTop + 3);
+      });
+    }
+    ctx.textAlign = 'start';
+  }
+
+  async function checkServerHealth() {
+    try {
+      const res = await fetch('/health');
+      if (res.ok) {
+        const d = await res.json();
+        const badge = document.getElementById('badge-model-quant');
+        if (badge && d.quant_mode) {
+          const qLabel = d.quant_mode.toUpperCase().replace(/_/g, ' ');
+          badge.innerText = `Qwen 3B (${qLabel})`;
+        }
+      }
+    } catch(e) {}
+  }
+
+  window.onload = () => {
+    checkServerHealth();
+    showSandboxInheritanceNotice();
+    renderScenarioButtons();
+    renderInjectionPresets();
+    refreshState();
+    refreshMemories();
+    drawChart();
+    loadRunList();
+    updateArcUI();
+  };
+</script>
+</body>
+</html>

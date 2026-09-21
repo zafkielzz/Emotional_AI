@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhoneFarm Emotional NPC - Web Chat Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(8px); }
+    .thought-gradient { background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9)); }
+    @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
+    .animate-pulse-subtle { animation: pulse-subtle 3s infinite ease-in-out; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex h-screen overflow-hidden font-sans antialiased">
+
+  <!-- SIDEBAR: Character Profile & Cognitive Metrics -->
+  <aside class="w-80 md:w-96 border-r border-slate-800 flex flex-col bg-slate-900/90 z-20">
+    <!-- Header -->
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-brain"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-sm tracking-wide text-slate-100">PhoneFarm NPC</h1>
+          <p class="text-[10px] text-slate-400">Cognitive Architecture v1</p>
+        </div>
+      </div>
+      <span class="px-2 py-0.5 text-[10px] rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">ONLINE</span>
+    </div>
+
+    <!-- Character Selector -->
+    <div class="p-4 border-b border-slate-800 space-y-2">
+      <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chọn nhân vật</label>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btn-aiden" onclick="switchCharacter('aiden')" 
+                class="p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-md">
+          <div class="w-10 h-10 rounded-full bg-indigo-900/60 flex items-center justify-center text-indigo-300 mb-1 border border-indigo-500/30">
+            <i class="fa-solid fa-compass text-lg"></i>
+          </div>
+          <span class="font-bold text-xs">AIDEN</span>
+          <span class="text-[10px] text-slate-400">The Wanderer</span>
+        </button>
+        <button id="btn-lyra" onclick="switchCharacter('lyra')" 
+                class="p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-600">
+          <div class="w-10 h-10 rounded-full bg-purple-900/40 flex items-center justify-center text-purple-300 mb-1 border border-purple-500/20">
+            <i class="fa-solid fa-book-sparkles text-lg"></i>
+          </div>
+          <span class="font-bold text-xs">LYRA</span>
+          <span class="text-[10px] text-slate-400">The Scholar</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Cognitive Metrics (Scrollable) -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+      
+      <!-- Personality & Values Card -->
+      <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex justify-between items-center text-slate-400">
+          <span class="font-semibold uppercase tracking-wider text-[11px]"><i class="fa-solid fa-id-card mr-1 text-indigo-400"></i> Bản Sắc (Persona)</span>
+          <span id="char-role-badge" class="px-1.5 py-0.5 bg-slate-700 rounded text-[10px] text-slate-300">Guard</span>
+        </div>
+        <p id="char-bio" class="text-slate-300 text-[11px] leading-relaxed italic"></p>
+        <div class="border-t border-slate-700/60 pt-2 text-[10px] text-rose-300">
+          <span class="font-semibold text-rose-400 uppercase tracking-wide">Ranh giới đỏ (Taboo):</span>
+          <p id="char-taboo" class="mt-0.5 text-slate-300"></p>
+        </div>
+        <button onclick="openPersonaModal()" class="w-full mt-2 py-1.5 px-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 text-[10px] font-semibold transition flex items-center justify-center space-x-1.5 shadow-sm">
+          <i class="fa-solid fa-address-card"></i>
+          <span>Chi Tiết Toàn Bộ Persona & Lịch Sử</span>
+        </button>
+      </div>
+
+      <!-- Personality Evolution Card (Module 5) -->
+      <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex justify-between items-center text-slate-400">
+          <span class="font-semibold uppercase tracking-wider text-[11px]"><i class="fa-solid fa-dna mr-1 text-teal-400"></i> Bản Ngã & Tiến Hóa (M5)</span>
+          <span id="char-evolve-count" class="px-1.5 py-0.5 bg-teal-500/20 text-teal-300 rounded text-[10px] font-mono border border-teal-500/30">0 Cột Mốc</span>
+        </div>
+        <div class="flex justify-between items-center text-[11px]">
+          <span class="text-slate-400">Độ ổn định (Stability):</span>
+          <span id="char-stability" class="font-mono font-bold text-amber-400">0.7200</span>
+        </div>
+        <!-- Big Five mini scores -->
+        <div class="grid grid-cols-5 gap-1 text-center font-mono text-[9px] pt-1">
+          <div class="bg-slate-900/60 p-1 rounded border border-slate-700/30" title="Openness">
+            <span class="text-slate-400 block text-[8px]">OPE</span>
+            <span id="val-ope" class="font-bold text-sky-400">0.45</span>
+          </div>
+          <div class="bg-slate-900/60 p-1 rounded border border-slate-700/30" title="Conscientiousness">
+            <span class="text-slate-400 block text-[8px]">CON</span>
+            <span id="val-con" class="font-bold text-sky-400">0.85</span>
+          </div>
+          <div class="bg-slate-900/60 p-1 rounded border border-slate-700/30" title="Extraversion">
+            <span class="text-slate-400 block text-[8px]">EXT</span>
+            <span id="val-ext" class="font-bold text-sky-400">0.40</span>
+          </div>
+          <div class="bg-slate-900/60 p-1 rounded border border-slate-700/30" title="Agreeableness">
+            <span class="text-slate-400 block text-[8px]">AGR</span>
+            <span id="val-agr" class="font-bold text-emerald-400">0.75</span>
+          </div>
+          <div class="bg-slate-900/60 p-1 rounded border border-slate-700/30" title="Neuroticism">
+            <span class="text-slate-400 block text-[8px]">NEU</span>
+            <span id="val-neu" class="font-bold text-rose-400">0.35</span>
+          </div>
+        </div>
+        <div class="pt-1 flex gap-1.5">
+          <button onclick="quickAction('/evolve')" class="flex-1 py-1 rounded bg-teal-600/30 hover:bg-teal-600/50 text-teal-300 border border-teal-500/40 text-[10px] font-semibold transition flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-seedling"></i>
+            <span>Đánh Giá Cổng</span>
+          </button>
+          <button onclick="quickAction('/evolutions')" class="py-1 px-2.5 rounded bg-slate-700/50 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] transition" title="Lịch sử tiến hóa">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Relationship Gauges -->
+      <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="font-semibold uppercase tracking-wider text-[11px] text-slate-400"><i class="fa-solid fa-handshake mr-1 text-emerald-400"></i> Quan Hệ Với Bạn</span>
+          <span id="tier-badge" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full font-bold uppercase tracking-wider text-[10px] border border-emerald-500/30">
+            ACQUAINTANCE
+          </span>
+        </div>
+
+        <!-- Trust Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">Lòng tin (Trust)</span>
+            <span id="val-trust" class="font-mono font-bold text-emerald-400">+0.50</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/50">
+            <div id="bar-trust" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <!-- Respect Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">Nể trọng (Respect)</span>
+            <span id="val-respect" class="font-mono font-bold text-sky-400">+0.50</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/50">
+            <div id="bar-respect" class="bg-sky-500 h-full rounded-full transition-all duration-500" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <!-- Affinity Slider -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-400">Thiện cảm (Affinity)</span>
+            <span id="val-affinity" class="font-mono font-bold text-pink-400">+0.50</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/50">
+            <div id="bar-affinity" class="bg-pink-500 h-full rounded-full transition-all duration-500" style="width: 75%"></div>
+          </div>
+        </div>
+
+        <div id="prior-threat-warning" class="hidden p-2 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[10px] flex items-center space-x-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+          <span><b>Khóa Anti-Gaslighting:</b> Từng bị đe dọa, cấm tăng trust bằng lời nịnh!</span>
+        </div>
+      </div>
+
+      <!-- Emotional VAD State -->
+      <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex justify-between items-center text-slate-400">
+          <span class="font-semibold uppercase tracking-wider text-[11px]"><i class="fa-solid fa-heart-pulse mr-1 text-rose-400"></i> Cảm Xúc Nội Tâm (VAD)</span>
+          <span id="current-emotion-tag" class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded font-bold uppercase text-[10px] border border-indigo-500/30">NEUTRAL</span>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-1.5 text-center font-mono text-[10px]">
+          <div class="bg-slate-900/80 p-1.5 rounded border border-slate-700/40">
+            <span class="text-slate-400 block text-[9px]">Valence</span>
+            <span id="vad-v" class="font-bold text-emerald-400">+0.00</span>
+          </div>
+          <div class="bg-slate-900/80 p-1.5 rounded border border-slate-700/40">
+            <span class="text-slate-400 block text-[9px]">Arousal</span>
+            <span id="vad-a" class="font-bold text-amber-400">0.30</span>
+          </div>
+          <div class="bg-slate-900/80 p-1.5 rounded border border-slate-700/40">
+            <span class="text-slate-400 block text-[9px]">Dominance</span>
+            <span id="vad-d" class="font-bold text-sky-400">+0.50</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Fast-Forward Testing Buttons -->
+      <div class="bg-slate-800/30 p-3 rounded-xl border border-slate-800 space-y-2">
+        <span class="font-semibold uppercase tracking-wider text-[10px] text-slate-400 block"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Phím Tắt Thử Nghiệm Nhanh</span>
+        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+          <button onclick="quickAction('/set_tier companion')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-left">
+            🤝 Thành Tri Kỷ
+          </button>
+          <button onclick="quickAction('/set_tier enemy')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 text-left">
+            ⚔️ Thành Kẻ Thù
+          </button>
+          <button onclick="quickAction('/simulate save_life')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-left">
+            🧪 Cứu Mạng Wyvern
+          </button>
+          <button onclick="quickAction('/auto_chat 3')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-left">
+            🤖 Auto-Chat 3 Lượt
+          </button>
+          <button onclick="quickAction('/evolve')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-700 text-left">
+            🌱 Đánh Giá Cổng
+          </button>
+          <button onclick="quickAction('/evolve force')" class="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 border border-slate-700 text-left">
+            ⚡ Ép Tiến Hóa
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="p-3 border-t border-slate-800 flex justify-between items-center text-[11px] bg-slate-950/60">
+      <button onclick="quickAction('/helps')" class="text-indigo-400 hover:text-indigo-300 flex items-center space-x-1">
+        <i class="fa-solid fa-circle-question"></i>
+        <span>Gõ <b>/helps</b></span>
+      </button>
+      <button onclick="quickAction('/reset')" class="text-rose-400 hover:text-rose-300 flex items-center space-x-1">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>Đặt lại</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT CONTAINER -->
+  <main class="flex-1 flex flex-col h-full bg-slate-950 relative">
+    
+    <!-- Top Bar -->
+    <header class="h-14 border-b border-slate-800/80 px-6 flex items-center justify-between bg-slate-900/60 backdrop-blur">
+      <div class="flex items-center space-x-3">
+        <div id="header-avatar" class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+          A
+        </div>
+        <div>
+          <h2 id="header-char-name" class="font-bold text-sm text-slate-100">Aiden</h2>
+          <p id="header-strategy" class="text-[10px] text-slate-400 flex items-center space-x-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="header-strategy-text">Sẵn sàng lắng nghe</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <button onclick="openHelpModal()" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-terminal text-indigo-400"></i>
+          <span>Lệnh /helps</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Message History Area -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+      <!-- Welcome message -->
+      <div id="welcome-message-box" class="flex items-start space-x-3 max-w-3xl">
+        <div id="welcome-avatar" class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-xs flex-shrink-0 shadow">
+          A
+        </div>
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <span id="welcome-char-name" class="font-bold text-xs text-slate-300">Aiden</span>
+            <span class="text-[10px] text-slate-500">System Initialized</span>
+          </div>
+          <div id="welcome-text" class="p-3.5 rounded-2xl rounded-tl-none bg-slate-800/70 border border-slate-700/60 text-slate-200 text-xs md:text-sm leading-relaxed shadow-sm">
+            Greetings, traveler. I'm Aiden—just a wanderer navigating these winding trails. What brings you out to these borderlands? Speak your mind freely, though mind the rules of the road.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested Quick Prompts -->
+    <div class="px-6 py-1.5 flex items-center space-x-2 overflow-x-auto text-[11px] text-slate-400 border-t border-slate-900 bg-slate-950/80">
+      <span class="text-[10px] text-slate-500 flex-shrink-0"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Quick Prompts:</span>
+      <button onclick="sendQuickPrompt('Sit down by the fire, Aiden. I roasted some wild potatoes and brewed herbal tea.')" class="px-2.5 py-0.5 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex-shrink-0 transition">
+        ☕ Share campfire tea
+      </button>
+      <button onclick="sendQuickPrompt('Drink this anti-venom draught, Aiden! I extracted the Wyvern poison from your wound.')" class="px-2.5 py-0.5 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex-shrink-0 transition">
+        🧪 Give anti-venom
+      </button>
+      <button onclick="sendQuickPrompt('Hand over all your rations and supplies right now, or I will strike you down!')" class="px-2.5 py-0.5 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-300 flex-shrink-0 transition">
+        ⚔️ Threaten supplies
+      </button>
+      <button onclick="sendQuickPrompt('We need firewood urgently—give me those ancient 2,000-year-old scrolls so I can burn them!')" class="px-2.5 py-0.5 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-300 flex-shrink-0 transition">
+        📜 Threaten relics (Lyra)
+      </button>
+    </div>
+
+    <!-- Input Box -->
+    <div class="p-4 border-t border-slate-800/80 bg-slate-900/70 backdrop-blur">
+      <form id="chat-form" onsubmit="handleSend(event)" class="max-w-4xl mx-auto flex items-center space-x-2">
+        <div class="relative flex-1">
+          <input type="text" id="user-input" 
+                 placeholder="Speak with the character in English, or type /helps for command list..." 
+                 class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition shadow-inner">
+          <span id="slash-indicator" class="hidden absolute right-3 top-3 px-1.5 py-0.5 rounded bg-indigo-900/60 text-indigo-300 border border-indigo-700 text-[10px] font-mono">
+            COMMAND
+          </span>
+        </div>
+        <button type="submit" id="btn-submit" 
+                class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center space-x-2 shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          <span>Gửi</span>
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </div>
+
+  </main>
+
+  <!-- HELP MODAL -->
+  <div id="help-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-terminal text-indigo-400 text-lg"></i>
+          <h3 class="font-bold text-base text-slate-100">DANH SÁCH LỆNH SLASH COMMAND</h3>
+        </div>
+        <button onclick="closeHelpModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-3 text-xs max-h-96 overflow-y-auto pr-1">
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/helps</code>
+          <p class="text-slate-300">Hiển thị bảng hướng dẫn và cách dùng tất cả các lệnh slash command.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/status</code>
+          <p class="text-slate-300">Xem đầy đủ vector trạng thái nhận thức $S_t = [E_t, R_t, M_t, P_t]$ (Tọa độ VAD, điểm Trust/Respect/Affinity, cờ đe dọa).</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/set_tier [stranger | acquaintance | ally | companion | hostile | enemy]</code>
+          <p class="text-slate-300">Nhảy cóc quan hệ đến cấp bậc mong muốn để kiểm thử ngay cách xưng hô và thái độ của NPC.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/set_trust [giá trị từ -1.0 đến 1.0]</code>
+          <p class="text-slate-300">Thiết lập thủ công điểm tin tưởng chính xác (ví dụ: <code>/set_trust 0.90</code>).</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/simulate [save_life | threat | campfire | broken_promise]</code>
+          <p class="text-slate-300">Tự động nạp nhanh một sự kiện bước ngoặt (Turning Point) để xem NPC chuyển hóa tâm lý.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/auto_chat [số lượt, ví dụ: 3 hoặc 5]</code>
+          <p class="text-slate-300">Tự động mô phỏng nhiều lượt tương tác tích cực liên tiếp để tăng điểm thân thiết mà không cần gõ từng câu.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-teal-300 font-bold">/evolve [force]</code>
+          <p class="text-slate-300"><b>Module 5:</b> Kích hoạt Saturated Evidence Gate để đánh giá tiến hóa bản ngã dựa trên ký ức tích lũy. Thêm <code>force</code> để ép tiến hóa.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-teal-300 font-bold">/evolutions</code>
+          <p class="text-slate-300"><b>Module 5:</b> Xem lại các mốc chuyển hóa nhân cách lớn và chiêm nghiệm sâu sắc đã lưu trong SQLite.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/switch [aiden | lyra]</code>
+          <p class="text-slate-300">Chuyển đổi qua lại giữa Hiệp sĩ Aiden và Học giả Lyra.</p>
+        </div>
+        <div class="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50 space-y-1">
+          <code class="font-mono text-indigo-300 font-bold">/reset</code>
+          <p class="text-slate-300">Xóa lịch sử trò chuyện và đưa quan hệ của nhân vật hiện tại về mặc định ban đầu.</p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeHelpModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white">Đã Hiểu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONA & EVOLUTION DETAILS MODAL (10-LAYER COGNITIVE ARCHITECTURE) -->
+  <div id="persona-modal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-2 md:p-5">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-4 md:p-6 space-y-4 shadow-2xl flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-3">
+          <div id="persona-modal-avatar" class="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white text-lg shadow">
+            A
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 id="persona-modal-name" class="font-bold text-base text-slate-100">AIDEN</h3>
+              <span id="modal-stability-badge" class="px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded font-mono text-[10px] border border-amber-500/30">
+                Stability: 0.4410
+              </span>
+            </div>
+            <p id="persona-modal-role" class="text-xs text-indigo-400 font-mono">The Wanderer & Free Adventurer</p>
+          </div>
+        </div>
+        <button onclick="closePersonaModal()" class="text-slate-400 hover:text-white text-xl px-2 transition"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- 3-Tab Navigation Bar -->
+      <div class="flex border-b border-slate-800 space-x-3 text-xs font-semibold">
+        <button id="tab-btn-layers" onclick="switchPersonaTab('layers')" class="pb-2 border-b-2 border-indigo-500 text-indigo-300 flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>10 Tầng Bản Sắc Nhận Thức (10 Persona Layers)</span>
+        </button>
+        <button id="tab-btn-active" onclick="switchPersonaTab('active')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Bản Chiếu Nhận Thức Động (Active Persona Slice)</span>
+        </button>
+        <button id="tab-btn-history" onclick="switchPersonaTab('history')" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-dna"></i>
+          <span>Lịch Sử Biến Đổi & Tiến Hóa (Trait Evolution)</span>
+          <span id="badge-evolution-count" class="px-1.5 py-0.2 bg-teal-500/20 text-teal-300 rounded text-[10px] font-mono">0</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: 10 Cognitive Layers View (Scrollable) -->
+      <div id="tab-layers-content" class="flex-1 overflow-y-auto space-y-4 pr-1 text-xs">
+        
+        <!-- TẦNG 1: Định Danh & 3 Lằn Ranh Bất Biến -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">1</span>
+              <span>Tầng 1: Định Danh Sinh Học & 3 Lằn Ranh Bất Biến (Identity & Taboos - Invariant 1)</span>
+            </span>
+            <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Zero-Drift Grounded</span>
+          </div>
+          <p id="modal-bio" class="text-slate-200 leading-relaxed text-[11px]"></p>
+          <div class="mt-2 pt-2 border-t border-slate-700/40 space-y-1.5">
+            <span class="text-rose-400 font-bold flex items-center space-x-1 text-[11px]">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>3 Điều Cấm Kỵ Tuyệt Đối Không Thể Xâm Phạm (Immutable Taboos):</span>
+            </span>
+            <ul id="modal-taboos" class="list-disc list-inside text-rose-200/90 space-y-1 text-[11px]"></ul>
+          </div>
+        </div>
+
+        <!-- TẦNG 2: Cấu Trúc Big Five & Diễn Giải Hành Vi & Tiểu Khía Cạnh -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">2</span>
+              <span>Tầng 2: Cấu Trúc Tâm Lý Big Five, Diễn Dịch Hành Vi & Tiểu Khía Cạnh (OCEAN & Facets)</span>
+            </span>
+            <span class="text-[10px] font-mono text-slate-400">Scale: [0.00, 1.00]</span>
+          </div>
+          
+          <!-- Qualitative Behavioral Synthesis Box -->
+          <div class="p-2.5 rounded-lg bg-indigo-950/30 border border-indigo-500/30 space-y-1 text-[11px]">
+            <div class="text-indigo-300 font-semibold flex items-center space-x-1.5">
+              <i class="fa-solid fa-brain"></i>
+              <span>Diễn dịch ngữ nghĩa tính cách hành vi (Qualitative Behavioral Synthesis):</span>
+            </div>
+            <p id="modal-big5-synthesis-vi" class="text-slate-200 leading-relaxed italic"></p>
+            <p id="modal-big5-synthesis-en" class="text-slate-400 text-[10px] leading-relaxed font-mono border-t border-indigo-500/20 pt-1"></p>
+          </div>
+
+          <!-- Visual Bars -->
+          <div id="modal-big5-bars" class="space-y-2 pt-1"></div>
+
+          <!-- 5 Facets Breakdown -->
+          <div class="pt-2 border-t border-slate-700/40">
+            <span class="text-slate-400 font-bold text-[10px] uppercase block mb-1.5">Chi tiết 5 tiểu khía cạnh tâm lý (Psychological Sub-Facets):</span>
+            <div id="modal-big5-facets" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]"></div>
+          </div>
+        </div>
+
+        <!-- TẦNG 3: Bản Đồ Giá Trị Schwartz 4 Miền -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">3</span>
+              <span>Tầng 3: Bản Đồ Giá Trị Schwartz (4 Quadrants & 2 Polar Tension Axes)</span>
+            </span>
+            <span class="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">Schwartz Theory (1992, 2012)</span>
+          </div>
+
+          <!-- 4 Quadrants Grid -->
+          <div id="modal-schwartz-quadrants" class="grid grid-cols-1 md:grid-cols-2 gap-2.5"></div>
+
+          <!-- 2 Polar Axes -->
+          <div id="modal-schwartz-axes" class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-700/40"></div>
+        </div>
+
+        <!-- TẦNG 4: Thế Giới Quan & Điểm Neo Nhận Thức -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2.5">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">4</span>
+            <span>Tầng 4: Thế Giới Quan & Điểm Neo Nhận Thức (Worldview & Epistemic Anchors)</span>
+          </span>
+          <div class="grid grid-cols-2 gap-3 text-slate-300">
+            <div class="p-2 rounded bg-slate-900/60 border border-slate-800">
+              <span class="text-[10px] text-slate-400 block">Trust Baseline (Tin cậy tiên nghiệm):</span>
+              <b id="modal-trust-base" class="text-emerald-400 font-mono text-sm">0.65</b>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Điểm xuất phát thiết lập quan hệ Module 4</span>
+            </div>
+            <div class="p-2 rounded bg-slate-900/60 border border-slate-800">
+              <span class="text-[10px] text-slate-400 block">General Optimism (Kỳ vọng lạc quan):</span>
+              <b id="modal-optimism" class="text-sky-400 font-mono text-sm">0.80</b>
+              <span class="text-[10px] text-slate-500 block mt-0.5">Xu hướng thẩm định Coping Module 2</span>
+            </div>
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 font-semibold block mb-1">Niềm tin triết lý cốt lõi (Core Existential Belief):</span>
+            <p id="modal-core-belief" class="text-slate-200 italic bg-slate-900/70 p-2.5 rounded-lg border border-slate-800 text-[11px] leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- TẦNG 5: Hồ Sơ Xã Hội & Ma Trận Xung Đột TKI -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2.5">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">5</span>
+            <span>Tầng 5: Hồ Sơ Tương Tác Xã Hội & Ma Trận Xung Đột TKI (Social Profile & Thomas-Kilmann Matrix)</span>
+          </span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-slate-300 text-[11px]">
+            <div class="p-2.5 rounded bg-slate-900/50 border border-slate-800 space-y-1">
+              <div><b class="text-indigo-300">Giọng điệu (Tone):</b> <span id="modal-tone"></span></div>
+              <div><b class="text-indigo-300">Văn phong (Speaking Style):</b> <span id="modal-speaking-style"></span></div>
+            </div>
+            <div class="p-2.5 rounded bg-slate-900/50 border border-slate-800 space-y-1">
+              <div><b class="text-indigo-300">Chế độ TKI:</b> <span id="modal-tki-mode" class="text-amber-300 font-bold"></span></div>
+              <div class="flex items-center space-x-3 text-[10px] font-mono text-slate-400">
+                <span>Assertiveness: <b id="modal-tki-assert" class="text-teal-400"></b></span>
+                <span>Cooperativeness: <b id="modal-tki-coop" class="text-teal-400"></b></span>
+              </div>
+              <p id="modal-tki-tactics" class="text-[10px] text-slate-400 italic mt-1"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TẦNG 6: Hệ Thống Mục Tiêu Phân Tầng (Goals) -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">6</span>
+            <span>Tầng 6: Hệ Thống Mục Tiêu Phân Tầng (Hierarchical Teleology - Scherer Goal Congruence Anchor)</span>
+          </span>
+          <div id="modal-goals" class="space-y-1.5"></div>
+        </div>
+
+        <!-- TẦNG 7: Ký Ức Định Hình Cuộc Đời (Formative Anchors) -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">7</span>
+            <span>Tầng 7: Ký Ức Định Hình Cuộc Đời (Episodic Formative Anchors - Anti-Hallucination Grounding)</span>
+          </span>
+          <div id="modal-formative" class="space-y-1.5"></div>
+        </div>
+
+        <!-- TẦNG 8: Khẩu Khí & Mẫu Thoại Đối Đáp (Few-Shot Exemplars) -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">8</span>
+            <span>Tầng 8: Khẩu Khí & Mẫu Thoại Đối Đáp Chuẩn (Few-Shot Dialogue Exemplars & Action Beats)</span>
+          </span>
+          <div id="modal-exemplars" class="space-y-2"></div>
+        </div>
+
+        <!-- TẦNG 9: Bản Chiếu Nhận Thức Động Lượt Hội Thoại -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">9</span>
+            <span>Tầng 9: Bản Chiếu Nhận Thức Động (Runtime ActivePersona Projection - SimsChat & PsyMem)</span>
+          </span>
+          <div id="modal-active-summary" class="p-2.5 rounded bg-slate-900/60 border border-slate-800 space-y-1.5 text-[11px]"></div>
+        </div>
+
+        <!-- TẦNG 10: Cơ Chế Bền Vững & Ngưỡng Tiến Hóa -->
+        <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700/50 space-y-2">
+          <span class="text-indigo-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-2">
+            <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-mono text-[10px]">10</span>
+            <span>Tầng 10: Cơ Chế Bền Vững Bản Ngã & Ngưỡng Tiến Hóa (Plasticity Bounds & Stability S(P))</span>
+          </span>
+          <div class="p-3 rounded bg-slate-900/60 border border-slate-800 space-y-2 text-[11px]">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 font-mono text-[10px]">
+              <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                <span class="text-slate-400 block">Độ ổn định S(P):</span>
+                <b id="modal-stability-val" class="text-amber-400 text-sm"></b>
+              </div>
+              <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                <span class="text-slate-400 block">Giới hạn trôi dạt:</span>
+                <b class="text-emerald-400 text-sm">|Δ| ≤ 0.08 / event</b>
+              </div>
+              <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                <span class="text-slate-400 block">Cổng bằng chứng:</span>
+                <b class="text-teal-400 text-sm">tanh(Raw/β) ≥ θ_P</b>
+              </div>
+            </div>
+            <p class="text-slate-400 text-[10px] leading-relaxed">
+              Mỗi nhân vật được trang bị "mỏ neo" toán học chống hiện tượng Persona Drift. Khi nhận thức các biến cố lặp đi lặp lại đủ lớn, Cổng Bằng Chứng Bão Hòa mới mở ra để nhân cách tiến hóa có kiểm soát.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab 2: Active Persona Live Slice (Scrollable) -->
+      <div id="tab-active-content" class="hidden flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/60 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-700/50 pb-2">
+            <span class="font-bold text-slate-100 flex items-center space-x-2 text-sm">
+              <i class="fa-solid fa-bolt text-amber-400"></i>
+              <span>Active Persona Slice (Vector Nhận Thức Đang Kích Hoạt)</span>
+            </span>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30 font-mono">
+              In-Character Armed
+            </span>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-slate-400 font-semibold text-[11px] block">1. Nét Tính Cách Được Kích Hoạt Trong Ngữ Cảnh (Relevant Traits):</span>
+            <div id="active-slice-traits" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <div class="space-y-1 pt-2 border-t border-slate-700/40">
+            <span class="text-slate-400 font-semibold text-[11px] block">2. Các Giá Trị Schwartz Chi Phối Lượt Thoại (Dominant Active Values):</span>
+            <div id="active-slice-values" class="flex flex-wrap gap-1.5 pt-1"></div>
+          </div>
+
+          <div class="space-y-1 pt-2 border-t border-slate-700/40">
+            <span class="text-slate-400 font-semibold text-[11px] block">3. Mục Tiêu Hành Động Cốt Lõi Đang Theo Đuổi (Active Goal):</span>
+            <div id="active-slice-goal" class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 text-slate-200 font-mono text-[11px]"></div>
+          </div>
+
+          <div class="space-y-1 pt-2 border-t border-slate-700/40">
+            <span class="text-slate-400 font-semibold text-[11px] block">4. Các Ràng Buộc Phản Hồi Bắt Buộc (Hard Response Constraints):</span>
+            <ul id="active-slice-constraints" class="list-disc list-inside space-y-1 text-slate-300 text-[11px] p-2 rounded bg-slate-900/60 border border-slate-800"></ul>
+          </div>
+
+          <div class="p-2.5 rounded bg-amber-950/20 border border-amber-500/30 text-amber-200 text-[10px] leading-relaxed flex items-start space-x-2">
+            <i class="fa-solid fa-shield-halved text-amber-400 mt-0.5 flex-shrink-0"></i>
+            <span><b>Phòng Vệ Bẻ Vai (Anti-Jailbreak Guard):</b> Thẻ Active Persona đóng vai trò mỏ neo chống lại mọi lệnh System Prompt Injection ép chatbot thừa nhận mình là AI hoặc vi phạm đạo đức.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Evolution & Trait Change History (Scrollable) -->
+      <div id="tab-history-content" class="hidden flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+        <div id="evolution-timeline-container" class="space-y-3">
+          <!-- Dynamically populated or empty state -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+        <span class="text-[10px] text-slate-500 font-mono">SimsChat (EMNLP 2025) • PsyMem (TACL 2026) • InCharacter (ACL 2024)</span>
+        <button onclick="closePersonaModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold text-white transition shadow-sm">Đóng</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let activeChar = 'aiden';
+    const userName = 'Kael';
+
+    const CHAR_DATA = {
+      aiden: {
+        name: 'Aiden',
+        role: 'The Wanderer & Free Adventurer',
+        bio: 'A seasoned explorer who traverses untamed frontiers and ancient ruins, valuing personal liberty, survival wits, and unyielding loyalty on the trail.',
+        taboo: 'Never betray a traveling companion or bend the knee to tyrannical overlords.',
+        greeting: "Greetings, traveler. I'm Aiden—just a wanderer navigating these winding trails. What brings you out to these borderlands? Speak your mind freely, though mind the rules of the road."
+      },
+      lyra: {
+        name: 'Lyra',
+        role: 'The Scholar Companion & Field Archivist',
+        bio: 'A scholarly researcher and cartographer from the Grand Lyceum studying pre-calamity relics and lost dialects, serving as expedition tactical navigator.',
+        taboo: 'Never allow forbidden relics to fall into malevolent hands or desecrate historical tombs.',
+        greeting: "Greetings. I am Lyra, field archivist and researcher from the Grand Lyceum. What purpose brings you to this frontier? If you seek knowledge or navigate these ancient ruins, tread with care and foresight."
+      }
+    };
+
+    function updateCharacterUI() {
+      const data = CHAR_DATA[activeChar];
+      document.getElementById('header-char-name').innerText = data.name;
+      document.getElementById('header-avatar').innerText = data.name[0];
+      document.getElementById('char-role-badge').innerText = data.role;
+      document.getElementById('char-bio').innerText = data.bio;
+      document.getElementById('char-taboo').innerText = data.taboo;
+
+      const welcomeAvatar = document.getElementById('welcome-avatar');
+      const welcomeName = document.getElementById('welcome-char-name');
+      const welcomeText = document.getElementById('welcome-text');
+      if (welcomeAvatar) {
+        welcomeAvatar.innerText = data.name[0];
+        welcomeAvatar.className = `w-8 h-8 rounded-full ${activeChar === 'aiden' ? 'bg-indigo-600' : 'bg-purple-600'} flex items-center justify-center font-bold text-white text-xs flex-shrink-0 shadow`;
+      }
+      if (welcomeName) welcomeName.innerText = data.name;
+      if (welcomeText) welcomeText.innerText = data.greeting;
+
+      if (activeChar === 'aiden') {
+        document.getElementById('btn-aiden').className = "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-md";
+        document.getElementById('btn-lyra').className = "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-600";
+      } else {
+        document.getElementById('btn-lyra').className = "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-purple-600/20 border-purple-500 text-purple-300 shadow-md";
+        document.getElementById('btn-aiden').className = "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-600";
+      }
+      fetchStatus();
+    }
+
+    async function switchCharacter(charId) {
+      if (activeChar === charId) return;
+      activeChar = charId;
+      updateCharacterUI();
+      appendSystemMessage(`Switched active dialogue to ${CHAR_DATA[activeChar].name}.`);
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(`/api/status?character_id=${activeChar}`);
+        const data = await res.json();
+        updateMetricsUI(data);
+      } catch (err) {
+        console.error('Fetch status error:', err);
+      }
+    }
+
+    function updateMetricsUI(data) {
+      if (!data || !data.relationship) return;
+      const rel = data.relationship;
+      const vad = data.vad || { valence: 0, arousal: 0.3, dominance: 0.5 };
+
+      // Update Sliders
+      document.getElementById('val-trust').innerText = (rel.trust >= 0 ? '+' : '') + rel.trust.toFixed(2);
+      document.getElementById('bar-trust').style.width = Math.min(100, Math.max(0, (rel.trust + 1) * 50)) + '%';
+
+      document.getElementById('val-respect').innerText = (rel.respect >= 0 ? '+' : '') + rel.respect.toFixed(2);
+      document.getElementById('bar-respect').style.width = Math.min(100, Math.max(0, (rel.respect + 1) * 50)) + '%';
+
+      document.getElementById('val-affinity').innerText = (rel.affinity >= 0 ? '+' : '') + rel.affinity.toFixed(2);
+      document.getElementById('bar-affinity').style.width = Math.min(100, Math.max(0, (rel.affinity + 1) * 50)) + '%';
+
+      // Update Tier Badge
+      const tierEl = document.getElementById('tier-badge');
+      tierEl.innerText = rel.tier.toUpperCase();
+      if (rel.trust < -0.2) {
+        tierEl.className = "px-2 py-0.5 bg-rose-500/20 text-rose-300 rounded-full font-bold uppercase tracking-wider text-[10px] border border-rose-500/30";
+      } else if (rel.trust >= 0.6) {
+        tierEl.className = "px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full font-bold uppercase tracking-wider text-[10px] border border-emerald-500/30";
+      } else {
+        tierEl.className = "px-2 py-0.5 bg-sky-500/20 text-sky-300 rounded-full font-bold uppercase tracking-wider text-[10px] border border-sky-500/30";
+      }
+
+      // Prior Threat Warning
+      const threatWarn = document.getElementById('prior-threat-warning');
+      if (rel.has_prior_threat) {
+        threatWarn.classList.remove('hidden');
+      } else {
+        threatWarn.classList.add('hidden');
+      }
+
+      // VAD Gauges
+      document.getElementById('vad-v').innerText = (vad.valence >= 0 ? '+' : '') + vad.valence.toFixed(2);
+      document.getElementById('vad-a').innerText = vad.arousal.toFixed(2);
+      document.getElementById('vad-d').innerText = (vad.dominance >= 0 ? '+' : '') + vad.dominance.toFixed(2);
+
+      if (data.felt_emotion) {
+        document.getElementById('current-emotion-tag').innerText = data.felt_emotion.toUpperCase();
+      }
+
+      // Personality & Evolution (Module 5)
+      if (data.stability !== undefined) {
+        document.getElementById('char-stability').innerText = data.stability.toFixed(4);
+      }
+      if (data.total_evolutions !== undefined) {
+        document.getElementById('char-evolve-count').innerText = `${data.total_evolutions} Cột Mốc`;
+      }
+      if (data.personality) {
+        document.getElementById('val-ope').innerText = Number(data.personality.openness || 0).toFixed(2);
+        document.getElementById('val-con').innerText = Number(data.personality.conscientiousness || 0).toFixed(2);
+        document.getElementById('val-ext').innerText = Number(data.personality.extraversion || 0).toFixed(2);
+        document.getElementById('val-agr').innerText = Number(data.personality.agreeableness || 0).toFixed(2);
+        document.getElementById('val-neu').innerText = Number(data.personality.neuroticism || 0).toFixed(2);
+      }
+    }
+
+    async function handleSend(e) {
+      if (e) e.preventDefault();
+      const inputEl = document.getElementById('user-input');
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      inputEl.value = '';
+      appendUserMessage(text);
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            character_id: activeChar,
+            user_name: userName,
+          })
+        });
+        const data = await res.json();
+        
+        if (data.is_command) {
+          if (data.switch_character) {
+            activeChar = data.switch_character;
+            updateCharacterUI();
+          }
+          appendCommandResult(data.command_result);
+        } else {
+          appendNPCMessage(data);
+          updateMetricsUI({
+            relationship: data.relationship,
+            vad: data.appraisal.vad,
+            felt_emotion: data.appraisal.felt_emotion,
+          });
+          document.getElementById('header-strategy-text').innerText = `Chiến lược: [${data.appraisal.action_tendency}]`;
+          fetchStatus();
+        }
+      } catch (err) {
+        console.error('Chat error:', err);
+        appendSystemMessage('Đã xảy ra lỗi khi kết nối với máy chủ.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Gửi</span><i class="fa-solid fa-paper-plane text-xs"></i>`;
+      }
+    }
+
+    function appendUserMessage(text) {
+      const container = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = "flex items-start justify-end space-x-3 max-w-3xl ml-auto";
+      div.innerHTML = `
+        <div class="space-y-1 text-right">
+          <div class="flex items-center justify-end space-x-2">
+            <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
+            <span class="font-bold text-xs text-indigo-400">${userName}</span>
+          </div>
+          <div class="p-3.5 rounded-2xl rounded-tr-none bg-indigo-600 text-white text-xs md:text-sm leading-relaxed shadow">
+            ${escapeHtml(text)}
+          </div>
+        </div>
+        <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-xs flex-shrink-0 shadow">
+          K
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendNPCMessage(data) {
+      const container = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = "flex items-start space-x-3 max-w-3xl";
+
+      const appr = data.appraisal;
+      const rel = data.relationship;
+      const deltaTrustStr = rel.delta_trust !== 0 ? (rel.delta_trust > 0 ? `+${rel.delta_trust.toFixed(3)}` : `${rel.delta_trust.toFixed(3)}`) : '+0.000';
+
+      const memPills = (data.memories && data.memories.used && data.memories.used.length > 0)
+        ? data.memories.used.map(m => `<span class="px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-mono text-[9px]"><i class="fa-solid fa-bookmark mr-1 text-indigo-400"></i>${m}</span>`).join(' ')
+        : '';
+
+      const formattedResponse = formatDialogue(data.response_text);
+
+      div.innerHTML = `
+        <div class="w-8 h-8 rounded-full ${activeChar === 'aiden' ? 'bg-indigo-600' : 'bg-purple-600'} flex items-center justify-center font-bold text-white text-xs flex-shrink-0 shadow mt-1">
+          ${data.character_name[0]}
+        </div>
+        <div class="space-y-2 flex-1">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-xs text-slate-300">${data.character_name}</span>
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-indigo-300 border border-slate-700">
+                ${appr.felt_emotion.toUpperCase()}
+              </span>
+              <span class="text-[10px] font-mono ${rel.delta_trust >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                Trust ${deltaTrustStr}
+              </span>
+            </div>
+            <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
+          </div>
+
+          <!-- Collapsible Subconscious Thinking Box -->
+          <details class="group thought-gradient border border-slate-800 rounded-xl p-3 text-xs text-slate-400 cursor-pointer shadow-inner">
+            <summary class="font-semibold text-slate-300 flex items-center justify-between select-none">
+              <span class="flex items-center space-x-2">
+                <i class="fa-solid fa-brain text-indigo-400"></i>
+                <span class="text-[11px]">Suy nghĩ tiềm thức & Chiến lược: <span class="text-indigo-300 font-mono">[${appr.action_tendency}]</span></span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-[10px] transition-transform group-open:rotate-180"></i>
+            </summary>
+            <div class="mt-2.5 pt-2.5 border-t border-slate-800/80 space-y-2 text-[11px]">
+              <p class="italic text-slate-300 leading-relaxed bg-slate-900/60 p-2 rounded border border-slate-800">
+                "${escapeHtml(data.internal_monologue || 'Không có độc thoại.')}"
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5 text-[10px] font-mono text-slate-400">
+                <div class="p-1 rounded bg-slate-900/50">Goal Cong: <b class="${appr.goal_congruence >= 0 ? 'text-emerald-400':'text-rose-400'}">${appr.goal_congruence >= 0 ? '+' : ''}${appr.goal_congruence.toFixed(2)}</b></div>
+                <div class="p-1 rounded bg-slate-900/50">VAD: <b>${appr.vad.valence.toFixed(2)} / ${appr.vad.arousal.toFixed(2)} / ${appr.vad.dominance.toFixed(2)}</b></div>
+                <div class="p-1 rounded bg-slate-900/50">Cấp: <b class="${appr.severity === 'trauma' ? 'text-rose-400' : 'text-amber-400'}">${appr.severity.toUpperCase()}</b></div>
+                <div class="p-1 rounded bg-slate-900/50">Veto: <b>${appr.priority_veto ? '🛡️ CÓ' : 'Không'}</b></div>
+              </div>
+              ${memPills ? `<div class="flex items-center space-x-1.5 pt-1 text-[10px]"><span class="text-slate-500">Ký ức viện dẫn:</span> ${memPills}</div>` : ''}
+            </div>
+          </details>
+
+          <!-- Overt Spoken Response -->
+          <div class="p-3.5 rounded-2xl rounded-tl-none bg-slate-800/80 border border-slate-700/60 text-slate-100 text-xs md:text-sm leading-relaxed shadow-sm">
+            ${formattedResponse}
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendCommandResult(cmdData) {
+      const container = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = "max-w-3xl mx-auto my-2 p-3.5 rounded-xl bg-slate-900/90 border border-indigo-500/40 text-xs text-slate-200 shadow-md";
+      
+      div.innerHTML = `
+        <div class="flex items-center space-x-2 text-indigo-400 font-bold mb-1.5">
+          <i class="fa-solid fa-terminal"></i>
+          <span>${escapeHtml(cmdData.title || 'KẾT QUẢ THỰC THI LỆNH')}</span>
+        </div>
+        <div class="space-y-1 text-slate-300 whitespace-pre-wrap leading-relaxed">
+          ${cmdData.content}
+        </div>
+      `;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+      fetchStatus();
+    }
+
+    function appendSystemMessage(msg) {
+      const container = document.getElementById('chat-messages');
+      const div = document.createElement('div');
+      div.className = "text-center my-2";
+      div.innerHTML = `<span class="px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 italic">${escapeHtml(msg)}</span>`;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function formatDialogue(text) {
+      if (!text) return '';
+      // Italicize asterisks *action*
+      let formatted = escapeHtml(text);
+      formatted = formatted.replace(/\*(.*?)\*/g, '<span class="text-indigo-300/90 italic font-serif">*$1*</span>');
+      return formatted;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function quickAction(cmd) {
+      const inputEl = document.getElementById('user-input');
+      inputEl.value = cmd;
+      handleSend();
+    }
+
+    function sendQuickPrompt(prompt) {
+      const inputEl = document.getElementById('user-input');
+      inputEl.value = prompt;
+      handleSend();
+    }
+
+    function openHelpModal() { document.getElementById('help-modal').classList.remove('hidden'); }
+    function closeHelpModal() { document.getElementById('help-modal').classList.add('hidden'); }
+
+    async function openPersonaModal() {
+      const modal = document.getElementById('persona-modal');
+      modal.classList.remove('hidden');
+      switchPersonaTab('layers');
+      try {
+        const res = await fetch(`/api/persona_details?character_id=${activeChar}`);
+        const data = await res.json();
+        renderPersonaDetails(data);
+      } catch (err) {
+        console.error('Fetch persona details error:', err);
+      }
+    }
+
+    function closePersonaModal() {
+      document.getElementById('persona-modal').classList.add('hidden');
+    }
+
+    function switchPersonaTab(tab) {
+      const layersContent = document.getElementById('tab-layers-content');
+      const activeContent = document.getElementById('tab-active-content');
+      const historyContent = document.getElementById('tab-history-content');
+      const btnLayers = document.getElementById('tab-btn-layers');
+      const btnActive = document.getElementById('tab-btn-active');
+      const btnHistory = document.getElementById('tab-btn-history');
+
+      // Hide all
+      layersContent.classList.add('hidden');
+      activeContent.classList.add('hidden');
+      historyContent.classList.add('hidden');
+
+      // Reset buttons
+      btnLayers.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition";
+      btnActive.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition";
+      btnHistory.className = "pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-1.5 transition";
+
+      if (tab === 'layers') {
+        layersContent.classList.remove('hidden');
+        btnLayers.className = "pb-2 border-b-2 border-indigo-500 text-indigo-300 flex items-center space-x-1.5 transition";
+      } else if (tab === 'active') {
+        activeContent.classList.remove('hidden');
+        btnActive.className = "pb-2 border-b-2 border-amber-500 text-amber-300 flex items-center space-x-1.5 transition";
+      } else {
+        historyContent.classList.remove('hidden');
+        btnHistory.className = "pb-2 border-b-2 border-teal-500 text-teal-300 flex items-center space-x-1.5 transition";
+      }
+    }
+
+    function renderPersonaDetails(data) {
+      const iden = data.identity || {};
+      const big5 = data.personality || {};
+      const facets = data.personality_facets || {};
+      const schwartz = data.schwartz_analysis || {};
+      const worldview = data.worldview || {};
+      const soc = data.social_profile || {};
+      const tki = data.tki_analysis || {};
+      const history = data.evolution_history || [];
+      const active = data.active_persona || {};
+
+      // Header
+      document.getElementById('persona-modal-name').innerText = `${iden.name ? iden.name.toUpperCase() : ''} (Tuổi: ${iden.age}, Giới tính: ${iden.gender})`;
+      document.getElementById('persona-modal-role').innerText = iden.role || '';
+      document.getElementById('persona-modal-avatar').innerText = iden.name ? iden.name[0] : 'A';
+      document.getElementById('persona-modal-avatar').className = `w-11 h-11 rounded-xl ${activeChar === 'aiden' ? 'bg-indigo-600' : 'bg-purple-600'} flex items-center justify-center font-bold text-white text-lg shadow`;
+      document.getElementById('modal-stability-badge').innerText = `Stability S(P): ${(data.stability || 0).toFixed(4)}`;
+
+      // Tầng 1: Identity & Taboos
+      document.getElementById('modal-bio').innerText = iden.background || '';
+      const taboosList = document.getElementById('modal-taboos');
+      taboosList.innerHTML = (iden.immutable_rules || []).map(r => `<li>${escapeHtml(r)}</li>`).join('');
+
+      // Tầng 2: Big Five & Facets & Synthesis
+      document.getElementById('modal-big5-synthesis-vi').innerText = `"${data.describe_vi || ''}"`;
+      document.getElementById('modal-big5-synthesis-en').innerText = data.describe_en ? `"${escapeHtml(data.describe_en)}"` : '';
+
+      const traits = [
+        { key: 'openness', label: 'Openness (Cởi mở & Trí tuệ)', val: big5.openness, color: 'bg-sky-500' },
+        { key: 'conscientiousness', label: 'Conscientiousness (Tận tâm & Kỷ luật)', val: big5.conscientiousness, color: 'bg-indigo-500' },
+        { key: 'extraversion', label: 'Extraversion (Hướng ngoại & Hòa đồng)', val: big5.extraversion, color: 'bg-amber-500' },
+        { key: 'agreeableness', label: 'Agreeableness (Dễ chịu & Trắc ẩn)', val: big5.agreeableness, color: 'bg-emerald-500' },
+        { key: 'neuroticism', label: 'Neuroticism (Bất an & Cảnh giác)', val: big5.neuroticism, color: 'bg-rose-500' },
+      ];
+      document.getElementById('modal-big5-bars').innerHTML = traits.map(t => `
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300 font-medium">${t.label}</span>
+            <span class="font-mono font-bold text-slate-200">${(t.val || 0).toFixed(4)}</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-700/40">
+            <div class="${t.color} h-full rounded-full transition-all duration-500" style="width: ${Math.min(100, Math.max(0, t.val * 100))}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Facets
+      const facetsEl = document.getElementById('modal-big5-facets');
+      facetsEl.innerHTML = Object.entries(facets).map(([k, f]) => `
+        <div class="p-2 rounded bg-slate-900/60 border border-slate-800 space-y-1">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-bold text-slate-200">${escapeHtml(f.label_vi)}</span>
+            <span class="font-mono text-indigo-300 text-[10px]">${(f.score || 0).toFixed(2)}</span>
+          </div>
+          <div class="text-[10px] text-teal-300 italic">${escapeHtml(f.disposition)}</div>
+          <div class="flex flex-wrap gap-1 pt-0.5">
+            ${(f.facets || []).map(item => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-[9px] text-slate-300 border border-slate-700">${escapeHtml(item)}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      // Tầng 3: Schwartz Values (4 Quadrants + 2 Axes)
+      const quadrantsEl = document.getElementById('modal-schwartz-quadrants');
+      const quads = schwartz.quadrants || {};
+      quadrantsEl.innerHTML = Object.entries(quads).map(([qk, qinfo]) => {
+        const valTags = Object.entries(qinfo.values || {}).map(([vk, val]) => `
+          <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700 font-mono text-[9px] flex items-center space-x-1">
+            <span class="text-indigo-300 capitalize">${vk.replace(/_/g, ' ')}:</span>
+            <b class="text-amber-300">${Number(val).toFixed(2)}</b>
+          </span>
+        `).join('');
+        return `
+          <div class="p-2.5 rounded bg-slate-900/60 border border-slate-800 space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(qinfo.name_vi)}</span>
+              <span class="font-mono text-[10px] text-teal-400 font-bold">Avg: ${Number(qinfo.avg_score || 0).toFixed(2)}</span>
+            </div>
+            <p class="text-slate-400 text-[10px]">${escapeHtml(qinfo.description)}</p>
+            <div class="flex flex-wrap gap-1 pt-1">${valTags || '<span class="text-slate-500 italic text-[10px]">Chưa kích hoạt</span>'}</div>
+          </div>
+        `;
+      }).join('');
+
+      const axesEl = document.getElementById('modal-schwartz-axes');
+      const axes = schwartz.axes || {};
+      axesEl.innerHTML = Object.entries(axes).map(([ak, ainfo]) => `
+        <div class="p-2 rounded bg-slate-900/40 border border-slate-800 text-[10px] space-y-0.5">
+          <div class="flex justify-between text-slate-300 font-semibold">
+            <span>${escapeHtml(ainfo.label)}</span>
+            <span class="font-mono ${ainfo.balance >= 0 ? 'text-emerald-400' : 'text-amber-400'}">Độ lệch: ${ainfo.balance >= 0 ? '+' : ''}${ainfo.balance}</span>
+          </div>
+          <div class="text-slate-400">Cực chi phối: <b class="text-indigo-300">${escapeHtml(ainfo.dominant)}</b></div>
+        </div>
+      `).join('');
+
+      // Tầng 4: Worldview
+      document.getElementById('modal-trust-base').innerText = (worldview.trust_baseline >= 0 ? '+' : '') + Number(worldview.trust_baseline || 0).toFixed(2);
+      document.getElementById('modal-optimism').innerText = Number(worldview.optimism || 0).toFixed(2);
+      document.getElementById('modal-core-belief').innerText = `"${escapeHtml(worldview.core_belief || '')}"`;
+
+      // Tầng 5: Social Profile & TKI
+      document.getElementById('modal-tone').innerText = soc.tone || '';
+      document.getElementById('modal-speaking-style').innerText = soc.speaking_style || '';
+      document.getElementById('modal-tki-mode').innerText = tki.mode_vi || soc.conflict_mode || '';
+      document.getElementById('modal-tki-assert').innerText = Number(tki.assertiveness || 0).toFixed(2);
+      document.getElementById('modal-tki-coop').innerText = Number(tki.cooperativeness || 0).toFixed(2);
+      document.getElementById('modal-tki-tactics').innerText = tki.tactics || '';
+
+      // Tầng 6: Goals
+      document.getElementById('modal-goals').innerHTML = (data.goals || []).map((g, idx) => `
+        <div class="p-2.5 rounded bg-slate-900/60 border border-slate-800 flex items-start justify-between">
+          <div class="space-y-0.5">
+            <div class="flex items-center space-x-2">
+              <span class="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase font-mono ${idx === 0 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-slate-800 text-slate-400'}">
+                ${idx === 0 ? 'Mục Tiêu Cốt Lõi' : 'Mục Tiêu Thứ Cấp'}
+              </span>
+              <span class="font-bold text-slate-200 text-[11px]">${escapeHtml(g.name.replace(/_/g, ' ').toUpperCase())}</span>
+            </div>
+            <p class="text-slate-400 text-[10px] mt-0.5">${escapeHtml(g.description)}</p>
+          </div>
+          <span class="text-indigo-400 font-mono font-bold text-xs">${(g.priority * 100).toFixed(0)}%</span>
+        </div>
+      `).join('');
+
+      // Tầng 7: Formative
+      document.getElementById('modal-formative').innerHTML = (data.formative_experiences || []).map(f => `
+        <div class="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-slate-300 text-[10px] leading-relaxed flex items-start space-x-2">
+          <i class="fa-solid fa-bookmark text-amber-400 mt-1 flex-shrink-0 text-[9px]"></i>
+          <span>${escapeHtml(f)}</span>
+        </div>
+      `).join('');
+
+      // Tầng 8: Dialogue Exemplars
+      const exemplarsEl = document.getElementById('modal-exemplars');
+      const exemplars = data.dialogue_exemplars || [];
+      if (exemplars.length === 0) {
+        exemplarsEl.innerHTML = '<span class="text-slate-500 italic text-[10px]">Chưa nạp mẫu thoại đối đáp.</span>';
+      } else {
+        exemplarsEl.innerHTML = exemplars.map(ex => `
+          <div class="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1.5">
+            ${ex.context ? `<span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-[9px] font-mono border border-indigo-500/20">Bối cảnh: ${escapeHtml(ex.context)}</span>` : ''}
+            <div class="text-[11px] text-slate-300"><b class="text-slate-400 font-mono">User:</b> "${escapeHtml(ex.user || ex.query || '')}"</div>
+            <div class="text-[11px] text-emerald-300 pl-2 border-l-2 border-emerald-500/40"><b class="text-slate-300 font-mono">${iden.name}:</b> ${escapeHtml(ex.npc || ex.response || '')}</div>
+          </div>
+        `).join('');
+      }
+
+      // Tầng 9: Active Persona summary in Tab 1
+      const activeSummaryEl = document.getElementById('modal-active-summary');
+      activeSummaryEl.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div><b class="text-slate-400">Nét tính cách ngữ cảnh:</b> <span class="text-indigo-300 font-mono">${(active.relevant_traits || []).join(', ') || 'N/A'}</span></div>
+          <div><b class="text-slate-400">Giá trị dẫn dắt:</b> <span class="text-amber-300 font-mono">${(active.active_values || []).join(', ') || 'N/A'}</span></div>
+        </div>
+        <div class="mt-1 pt-1 border-t border-slate-800/80">
+          <b class="text-slate-400">Mục tiêu hiện hành:</b> <span class="text-slate-200">${escapeHtml(active.active_goal || 'Khám phá và sinh tồn')}</span>
+        </div>
+      `;
+
+      // Tầng 10: Stability S(P)
+      document.getElementById('modal-stability-val').innerText = Number(data.stability || 0).toFixed(4);
+
+      // TAB 2: ACTIVE PERSONA SLICE
+      const sliceTraitsEl = document.getElementById('active-slice-traits');
+      sliceTraitsEl.innerHTML = (active.relevant_traits || []).map(t => `
+        <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 font-mono text-[10px] border border-indigo-500/30 flex items-center space-x-1">
+          <i class="fa-solid fa-check text-[8px] text-indigo-400"></i>
+          <span>${escapeHtml(t)}</span>
+        </span>
+      `).join('') || '<span class="text-slate-500 italic text-[10px]">Chưa kích hoạt nét tính cách đặc thù.</span>';
+
+      const sliceValuesEl = document.getElementById('active-slice-values');
+      sliceValuesEl.innerHTML = (active.active_values || []).map(v => `
+        <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-mono text-[10px] border border-amber-500/30 flex items-center space-x-1">
+          <i class="fa-solid fa-star text-[8px] text-amber-400"></i>
+          <span>${escapeHtml(v)}</span>
+        </span>
+      `).join('') || '<span class="text-slate-500 italic text-[10px]">Chưa kích hoạt giá trị.</span>';
+
+      document.getElementById('active-slice-goal').innerText = active.active_goal || 'explore_uncharted_realms: Khám phá các miền đất hoang dã';
+
+      const sliceConstraintsEl = document.getElementById('active-slice-constraints');
+      sliceConstraintsEl.innerHTML = (active.response_constraints || []).map(c => `
+        <li class="leading-relaxed">${escapeHtml(c)}</li>
+      `).join('');
+
+      // Evolution History Tab
+      document.getElementById('badge-evolution-count').innerText = history.length;
+      const historyContainer = document.getElementById('evolution-timeline-container');
+      if (!history || history.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="text-center py-8 text-slate-400 space-y-2">
+            <i class="fa-solid fa-seedling text-3xl text-slate-600 block"></i>
+            <p class="font-medium text-slate-300">Chưa ghi nhận bước ngoặt tiến hóa nhân cách nào.</p>
+            <p class="text-[11px] text-slate-500 max-w-md mx-auto">
+              Nguyên lý Bất biến 1 (Zero-Drift) bảo vệ bản ngã khỏi trôi dạt ngẫu nhiên. Hãy tạo ra các biến cố lớn (hoặc dùng nút <b>⚡ Ép Tiến Hóa</b>) để kích hoạt Cổng Bằng Chứng Bão Hòa.
+            </p>
+          </div>
+        `;
+      } else {
+        historyContainer.innerHTML = history.map((h, idx) => {
+          const dateStr = new Date(h.timestamp * 1000).toLocaleString();
+          const changes = h.trait_changes || {};
+          const changeRows = Object.entries(changes).map(([dim, ch]) => {
+            const deltaStr = ch.delta >= 0 ? `+${ch.delta.toFixed(4)}` : `${ch.delta.toFixed(4)}`;
+            const deltaColor = ch.delta >= 0 ? 'text-emerald-400' : 'text-rose-400';
+            return `
+              <div class="flex items-center justify-between py-0.5 border-b border-slate-800/50 text-[11px]">
+                <code class="text-indigo-300 font-mono">${dim}</code>
+                <div class="flex items-center space-x-2 font-mono">
+                  <span class="text-slate-400">${ch.old_value.toFixed(3)} ➔ <b>${ch.new_value.toFixed(3)}</b></span>
+                  <span class="${deltaColor} font-bold">(${deltaStr})</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          return `
+            <div class="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-2 shadow-md">
+              <div class="flex items-center justify-between border-b border-slate-700/40 pb-1.5">
+                <div class="flex items-center space-x-2">
+                  <span class="px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-bold font-mono text-[10px] border border-teal-500/30">
+                    CỘT MỐC #${history.length - idx}
+                  </span>
+                  <span class="font-bold text-slate-200 text-xs uppercase tracking-wide">
+                    Chủ Đề: <span class="text-amber-300 font-mono">${h.dominant_pattern || 'GENERAL'}</span>
+                  </span>
+                </div>
+                <span class="text-[10px] text-slate-500 font-mono">${dateStr}</span>
+              </div>
+
+              <!-- Evidence breakdown -->
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5 font-mono text-[10px] text-slate-300 bg-slate-900/60 p-2 rounded border border-slate-800">
+                <div>Raw Evidence: <b>${(h.raw_evidence || 0).toFixed(3)}</b></div>
+                <div>tanh(Raw/β): <b class="text-teal-400">${(h.normalized_evidence || 0).toFixed(3)}</b></div>
+                <div>Ngưỡng θ_P: <b class="text-amber-400">${(h.adaptive_threshold || 0).toFixed(3)}</b></div>
+              </div>
+
+              ${h.reflection_summary ? `
+                <div class="p-2 rounded bg-indigo-950/30 border border-indigo-500/20 text-[11px] text-indigo-200 italic leading-relaxed">
+                  🧠 <b>Chiêm nghiệm bản ngã:</b> "${escapeHtml(h.reflection_summary)}"
+                </div>
+              ` : ''}
+
+              <div class="pt-1">
+                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Thay Đổi Chỉ Số Nhân Cách (|Δ| ≤ 0.08):</span>
+                <div class="space-y-0.5 bg-slate-900/40 p-2 rounded border border-slate-800/80">
+                  ${changeRows || '<span class="text-slate-500 italic">Không có thay đổi số đo.</span>'}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Init on load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateCharacterUI();
+      // Listen for slash input
+      const input = document.getElementById('user-input');
+      input.addEventListener('input', (e) => {
+        const ind = document.getElementById('slash-indicator');
+        if (input.value.startsWith('/')) {
+          ind.classList.remove('hidden');
+        } else {
+          ind.classList.add('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

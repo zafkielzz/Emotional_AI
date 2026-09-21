@@ -1,0 +1,6 @@
+# Install into the existing capstone environment; freeze resolved versions after smoke tests.
+onnx
+onnxruntime
+fastapi
+uvicorn[standard]
+

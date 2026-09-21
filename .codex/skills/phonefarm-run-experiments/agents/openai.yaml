@@ -1,0 +1,4 @@
+interface:
+  display_name: "PhoneFarm Experiments"
+  short_description: "Benchmark PhoneFarm routes and partitions"
+  default_prompt: "Use -run-experiments to run a reproducible PhoneFarm benchmark."
